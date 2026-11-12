@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.idea/
+TestResults/
+
+# SQLite
+notes.db
+notes.db-*
+
+# Frontend
+node_modules/
+dist/
+
+# Titkok
+.env
+.env.*
+
+# Claude Code – személyes, nem megosztott beállítások
+CLAUDE.local.md
+.claude/settings.local.json
