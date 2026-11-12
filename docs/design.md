@@ -17,7 +17,8 @@ Notes.sln
 ├─ Notes.Api/
 │  ├─ Controllers/   Auth, Notes, Folders (vékonyak: DTO be → service hívás → HTTP kód ki)
 │  ├─ Services/      AuthService, NoteService, FolderService, NoteAccessService
-│  ├─ Data/          AppDbContext, Entities/, Migrations/
+│  ├─ Data/          AppDbContext, Entities/
+│  ├─ Migrations/    EF Core migrációk (a dotnet ef generálja)
 │  ├─ Dtos/          request/response modellek
 │  ├─ Errors/        kivételek + központi hibakezelő
 │  ├─ Limits.cs      hosszkorlátok
@@ -181,11 +182,12 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D4 Mappa törlése: `SetNull`.
 - D5 Jegyzet/felhasználó törlése kaszkádol a megosztásokra.
 - D6 A séma csak migrációval változik (`EnsureCreated` csak a tesztben).
-- D7 Időbélyegek UTC-ben.
+- D7 Időbélyegek UTC-ben. Az `AppDbContext` értékkonvertere a beolvasott értéket UTC-nek jelöli, így a
+  JSON-ban `Z` utótaggal jelenik meg (az SQLite nem tárolja a `DateTimeKind`-ot).
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva).
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -202,6 +204,8 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V13 A token a kliensen `sessionStorage`-ban van, hogy a böngésző bezárásával a kliens elfelejtse.
   (Fejlesztői döntés: az MI eredetileg `localStorage`-ot javasolt. Vállalt következmény: új lapon újra
   be kell lépni; a szerveroldali érvényesség és az XSS-kockázat nem változik.)
+- V14 HTTPS-átirányítás (`UseHttpsRedirection`) csak Development környezeten kívül; fejlesztéskor a Vite
+  proxy HTTP-n éri el a backendet. (A 01. feladat reviewere találta a sablonmaradványt; a fejlesztő jóváhagyta.)
 
 ## 10. Nem célok
 

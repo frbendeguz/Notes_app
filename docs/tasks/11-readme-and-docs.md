@@ -17,8 +17,9 @@ A 2. mérföldkő („első működő verzió”) dokumentációja: indítási �
 - **`README.md`** (a repó gyökerében, magyarul):
   - a projekt egy bekezdésben, a stack, a mappaszerkezet röviden
   - előfeltételek (pontos .NET és Node verzió a projektfájlokból)
-  - **indítási útmutató** lépésenként tiszta klónból: JWT-kulcs beállítása user-secrets-szel (a parancs,
-    érték nélkül), adatbázis (migráció), backend indítása, frontend telepítése és indítása, a használt portok
+  - **indítási útmutató** lépésenként tiszta klónból: `dotnet tool restore` (helyi `dotnet-ef`), JWT-kulcs
+    beállítása user-secrets-szel (a parancs, érték nélkül), adatbázis (migráció), backend indítása,
+    frontend telepítése és indítása, a használt portok
   - **tesztfuttatási útmutató:** `dotnet test`, egy teszt szűrése, `npm run build` / `npm run lint`,
     hol vannak a mentett futások
   - hivatkozások: spec, design, tesztjelentés, hibafeltárás, API-leírás, MI-használat, MI-napló

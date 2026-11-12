@@ -38,6 +38,8 @@ Entitást nem adunk vissza. A `role` mező a válaszban a hívó szerepe.
 Egységtesztek (`NoteAccessServiceTests`): szerepszámítás tulajdonosra, szerkesztőre, olvasóra, idegenre, nem létezőre.
 Integrációs (`NotesTests`):
 - Létrehozás → megjelenik a listában; új bejelentkezéssel (másik `HttpClient`) is ugyanaz (2. feltétel)
+- A válasz `createdAt`/`updatedAt` mezője UTC-jelöléssel (`Z`) érkezik, és mentés–visszaolvasás után sem
+  tolódik el (a 01-ben bevezetett UTC-konverter ellenőrzése)
 - Határértékek `[Theory]`: cím 1/100 ✅, 101 ❌; szöveg 0/10 000 ✅, 10 001 ❌; elutasításnál nem jön létre jegyzet (3. feltétel)
 - Üres és szóközös cím 400; sikertelen szerkesztés után a jegyzet változatlan (4. feltétel)
 - A lista csak a saját jegyzeteket adja (egy másik felhasználó jegyzete nem látszik) (1. feltétel)

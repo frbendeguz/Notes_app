@@ -66,6 +66,10 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Ellenőrzés:** `dotnet build`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 8/8 (7 teszt, egy `[Theory]` két
   adatsorral); `dotnet ef migrations has-pending-model-changes`: nincs eltérés; a migrációban 3 egyedi index
   és `FK_Notes_Folders_FolderId` `SetNull`; `git status --ignored`: `notes.db`, `bin/`, `obj/` ignorált.
-- **Fejlesztői döntés:**
-- **Ellenőrzés (fejlesztő):**
+- **Fejlesztői döntés:**  
+  - *dotnet-ef helyi eszközként (tool manifest):* elfogadtam. A verzió (10.0.15) a repóban rögzített és egyezik az EF Core csomagokéval; nincs szükség globális telepítésre, tiszta klón után a `dotnet tool restore` elég. A README-be a 11. feladatban bekerül.
+  - *A tesztsablon csomagjai:* megtartottam őket. A `Microsoft.NET.Test.Sdk` és az `xunit.runner.visualstudio` nélkül a `dotnet test` nem találná és nem futtatná a teszteket; a `coverlet.collector` (lefedettségmérés) nem kötelező, ha a projekt végéig nem használjuk, törölhető.
+  - *UTC-értékkonverter az `AppDbContext`-ben (a feladat hatókörén túli kiegészítés):* elfogadtam. Az SQLitenem tárolja a `DateTimeKind`-ot, ezért beolvasáskor `Unspecified` lenne, és a JSON-ból hiányozna az UTC-jelölés. A felelősség az adatelérési rétegé, egy helyen van, és nem érinti a sémát: a migráció nem változott (`has-pending-model-changes` szerint a modell egyezik). Ellenőrzése a 03. feladat tesztjébe került.
+  - *V14 (HTTPS-átirányítás csak Development környezeten kívül):* a reviewer észrevétele alapján javasolt megoldást elfogadtam, mert a Vite proxy HTTP-n éri el a backendet; a 02. feladatban valósul meg.
+- **Ellenőrzés (fejlesztő):** A teszteket magam is lefuttatam manuálisan, hogy megbizonyosodjak arról, hogy tényleg nem futnak hibára, és nem csak az agent hallucinált. A tesztek mind lefutottak (8/8 sikeres).
 - **Döntési eset jelölt?** nem

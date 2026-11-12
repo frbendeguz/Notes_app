@@ -32,6 +32,7 @@ V1, V4, V10. A jogosultság továbbra is adatbázisból, a `NoteAccessService`-e
 ## Tesztek (`SharingTests`)
 - Megosztás Olvasóként és Szerkesztőként → a címzett a „Velem megosztott” listában látja, és olvashatja (5. feltétel)
 - Nem létező felhasználó 404; önmaga 400; ismétlés 409 és a megosztások száma nem nő; érvénytelen szerep 400 (5. feltétel)
+- Ugyanaz a címzett egy MÁSIK jegyzetre továbbra is megosztható (a duplikációtilalom jegyzetenkénti, nem globális)
 - Szerkesztő módosíthatja a címet/szöveget (200); törlése és megosztása 403; olvasó PUT/DELETE/megosztás 403 (6. feltétel)
 - Idegen felhasználó a megosztás-végpontokra és a jegyzetre 404 (6. feltétel)
 - Visszavonás után a címzett GET-je 404, a „Velem megosztott” listában nincs; a tulajdonosnál megvan (7. feltétel)

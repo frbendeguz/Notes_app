@@ -6,6 +6,7 @@ teszt-segéd, amellyel a későbbi tesztek hitelesített klienst kapnak.
 
 ## Előfeltétel
 01 kész: build és teszt zöld, entitások, `Limits`, `Text.Normalize`, `TestApiFactory`.
+A `dotnet-ef` helyi eszközként van a repó gyökerében (`dotnet-tools.json`): ha nem fut, `dotnet tool restore`.
 
 ## Olvasd el először
 - `docs/design.md`: 3. Hitelesítés, 5. REST API (auth végpontok, hibakezelés), 6. Validáció, V5, V6, V9, V11, V12
@@ -29,6 +30,11 @@ teszt-segéd, amellyel a későbbi tesztek hitelesített klienst kapnak.
 - Teszt-segéd: `AuthHelper` (regisztrál egyedi felhasználót, visszaad egy `HttpClient`-et beállított Bearer fejléccel)
 - `TestApiFactory` kiegészítése a tesztkulccsal. A kulcs a konfigurációból jön; ha a `Program.cs`-beli közvetlen olvasás nem
   felülírható a `WebApplicationFactory`-ből, használj halasztott options-kötést vagy környezeti változót. Dokumentáld a választott megoldást egy kommentben.
+
+- `Program.cs` middleware-sorrend rendbetétele (01-ből örökölt sablonmaradvány): `UseAuthentication()` a
+  `UseAuthorization()` ELŐTT, a központi hibakezelő a pipeline elején. `UseHttpsRedirection()` csak
+  Development környezeten kívül fusson, mert a Vite proxy HTTP-n hívja a backendet, és az átirányítás
+  megtörné (V14).
 
 ### NEM szerepel
 - Jegyzet, mappa, megosztás végpontok; `NoteAccessService`; frontend
