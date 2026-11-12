@@ -11,7 +11,7 @@ Ez a fájl neked szól, nem az agentnek. Leírja, mit csinálnak a beállításo
 | `.claude/rules/testing.md` | Tesztelési szabályok | Ha Claude a `Notes.Tests/` alatti fájlt olvas |
 | `.claude/rules/frontend.md` | Frontend-konvenciók | Ha Claude a `notes-web/` alatti fájlt olvas |
 | `.claude/settings.json` | Jogosultságok (allow/ask/deny), plan alapmód, hookok | Indításkor |
-| `.claude/hooks/*.mjs` | Védelmek, amelyek Claude döntésétől függetlenül hatnak | A megfelelő eseménynél |
+| `.claude/hooks/*.mjs` | Védelmek, amelyek Claude döntésétől függetlenül hatnak; a betöltött szabályok naplózása | A megfelelő eseménynél |
 | `.claude/skills/task/SKILL.md` | A `/task NN` parancs: a feladat-munkafolyamat | Ha beírod: `/task 01` |
 | `.claude/skills/change-request/SKILL.md` | A `/change-request` parancs: hatásvizsgálat, spec v2.0 javaslat, új feladatok | Ha beírod, a változtatási igény után |
 | `.claude/agents/task-reviewer.md` | Független ellenőr a feladat végén | A `/task` munkafolyamat hívja |
@@ -56,10 +56,15 @@ jóváhagyásáig nem módosít fájlt. Ha ez egy kisebb kérésnél zavar, a Sh
    - `/doctor` – jelez-e hibás vagy figyelmen kívül hagyott szabályt
 5. A munkamenet elején Claude-nak tudnia kell a haladásról (ezt a SessionStart hook adja). Kérdezd meg
    tőle: „Melyik a következő feladat?” – ha a 01-et mondja, a hook működik.
-6. A szabályfájlok csak akkor töltődnek be, amikor már van `Notes.Api/`, `Notes.Tests/` vagy `notes-web/`
-   mappa, és Claude olvas belőle. A 01. feladat után a `/memory` paranccsal ellenőrizheted, hogy a
-   `backend.md` betöltődik-e. Ha nem, a hiba elkerülésére kipróbálhatod az idézőjel nélküli írásmódot
-   (`paths: Notes.Api/**`); a Claude Code issue-k között van erre vonatkozó bejelentés.
+6. A szabályfájlok csak akkor töltődnek be, amikor Claude a `Read`, `Write` vagy `Edit` eszközzel egy
+   illeszkedő fájlhoz nyúl (pl. a `Notes.Api/` alatt). Hogy betöltődtek-e, azt a
+   `.claude/logs/instructions.log` mutatja: az `InstructionsLoaded` hook minden betöltést egy sorba ír
+   (`path_glob_match  .claude/rules/backend.md  kiváltotta: Notes.Api/Program.cs`). A `/context` a
+   munkamenet indulásakor betöltött fájlokat mutatja a **Memory files** alatt.
+   A `/memory` mást mutat: a szerkeszthető memóriafájlok helyét és az **auto memory** be- és kikapcsolását.
+   Az auto memory Claude saját jegyzetei; ha még nem jegyzett fel semmit, üresnek látszik, és ez rendben van.
+   Ha a naplóban a `backend.md` nem jelenik meg egy `Notes.Api/` fájl beolvasása után, próbáld ki az
+   idézőjel nélküli írásmódot (`paths: Notes.Api/**`); a Claude Code issue-k között van erre bejelentés.
 
 ## Egy feladat menete
 

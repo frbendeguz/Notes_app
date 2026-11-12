@@ -21,3 +21,4 @@ dist/
 # Claude Code – személyes, nem megosztott beállítások
 CLAUDE.local.md
 .claude/settings.local.json
+.claude/logs/
