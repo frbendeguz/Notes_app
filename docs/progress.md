@@ -10,7 +10,7 @@ a commitot a fejlesztő hagyja jóvá.
 
 ## 2. mérföldkő – Első működő verzió (10. hét)
 - [x] 01 – Alapok és adatréteg (`tasks/01-foundation.md`)
-- [ ] 02 – Regisztráció, belépés, JWT, hibakezelés (`tasks/02-auth.md`)
+- [x] 02 – Regisztráció, belépés, JWT, hibakezelés (`tasks/02-auth.md`)
 - [ ] 03 – Jegyzet CRUD és `NoteAccessService` (`tasks/03-notes-crud.md`)
 - [ ] 04 – Mappák (`tasks/04-folders.md`)
 - [ ] 05 – Megosztás (`tasks/05-sharing.md`)
@@ -44,3 +44,12 @@ a commitot a fejlesztő hagyja jóvá.
   kell előtte – a README-be (11. feladat) felveendő.
 - 01 → 02: a `Program.cs`-ben a `UseAuthentication()` a `UseAuthorization()` elé kerüljön.
 - 01 → 05: teszt arra, hogy ugyanaz a felhasználó egy másik jegyzetre még megosztható.
+- 02: belépés hiányzó/üres mezőkkel → 401 ugyanazzal az üzenettel (fejlesztői döntés), `ClockSkew = 0`, a `/me` a
+  tokenből válaszol. Javaslat: a design 3./5. szakaszába felvenni (a fejlesztő dönt).
+- 02: új hibatípus: `UnauthorizedException` (belépési 401). A design 5. szakaszának kivétellistája négyet sorol fel;
+  pontosítás javasolt.
+- 02: a tesztek a `TestApiFactory.TestJwtKey` nyilvános tesztkulcsot használják; tiszta klónban a backend futtatásához
+  a fejlesztői kulcsot `dotnet user-secrets set "Jwt:Key" ...` paranccsal kell beállítani – a README-be (11. feladat).
+- 02: a `Register_UserNameBoundaryLength_Returns201` 3 karakteres neve csak 256 változat; ha később más teszt is
+  regisztrál 3 karakteres nevet a közös fixture-ben, ütközhet.
+- 02: kézi kipróbálás (`dotnet run` + kérés a végpontokra) az agent részéről nem történt (jogosultság elutasította).

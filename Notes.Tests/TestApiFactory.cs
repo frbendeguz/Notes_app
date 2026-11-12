@@ -18,6 +18,13 @@ namespace Notes.Tests;
 /// </summary>
 public class TestApiFactory : WebApplicationFactory<Program>
 {
+    /// <summary>
+    /// TEST-ONLY signing key (public, in the repo on purpose). The real key is never in the repo (user-secrets).
+    /// It reaches the app through configuration: Program.cs binds JwtBearerOptions from IOptions&lt;JwtOptions&gt;
+    /// lazily (deferred options binding), so this UseSetting value overrides user-secrets / environment.
+    /// </summary>
+    public const string TestJwtKey = "test-only-jwt-key-not-a-secret-0123456789abcdef";
+
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
 
     public TestApiFactory()
@@ -27,6 +34,7 @@ public class TestApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseSetting("Jwt:Key", TestJwtKey);
         builder.ConfigureServices(services =>
         {
             // Replace the file-based SQLite registration from Program.cs.
