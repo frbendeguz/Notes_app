@@ -49,7 +49,9 @@ jóváhagyásáig nem módosít fájlt. Ha ez egy kisebb kérésnél zavar, a Sh
 4. Ellenőrizd:
    - `/permissions` – látszanak-e az allow/ask/deny szabályok
    - `/hooks` – látszik-e a SessionStart és a két PreToolUse hook
-   - `/agents` – látszik-e a `task-reviewer`
+   - a `task-reviewer` subagent: kérdezd meg Claude-ot („Milyen subagentek érhetők el ebben a projektben?”),
+     vagy nézd meg a `/doctor` jelentését (a `/agents` varázsló megszűnt; a subagent maga a
+     `.claude/agents/task-reviewer.md` fájl)
    - a `/` menüben látszik-e a `task` parancs
    - `/doctor` – jelez-e hibás vagy figyelmen kívül hagyott szabályt
 5. A munkamenet elején Claude-nak tudnia kell a haladásról (ezt a SessionStart hook adja). Kérdezd meg

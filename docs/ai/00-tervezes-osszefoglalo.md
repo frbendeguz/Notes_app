@@ -63,6 +63,12 @@
   relatív és abszolút út, nagybetűs írásmód, hibás bemenet); mind a várt eredményt adta.
 - **Konfiguráció:** a `settings.json` JSON-ként, a skillek, a subagent és a szabályfájlok fejléce
   YAML-ként érvényes.
+- **Első futtatás a saját gépen (2026-11-12, Claude Code 2.1.322, VS Code bővítmény, Windows):** a
+  `/doctor` jelentése szerint minden konfigurációs fájl hibátlan, a szabályfájlok `paths` szerint, a skillek
+  csak paranccsal töltődnek be, a `task-reviewer` subagent felismert, az állandó kontextusterhelés kb.
+  1k token, a SessionStart hook 204 ms alatt fut le. A diagnosztika közben a `curl` hívást a projekt
+  tiltólistája blokkolta, ami azt mutatja, hogy a jogosultsági szabályok érvényesülnek. Eltérés a tervtől:
+  a `/agents` varázsló megszűnt, ezért a subagent ellenőrzése az útmutatóban módosult.
 
 ## A módszer korlátai, amiket ebben a fázisban tapasztaltunk
 
