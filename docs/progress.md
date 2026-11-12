@@ -9,7 +9,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 00 – Tervezés és agent-munkakörnyezet (`ai/00-tervezes-osszefoglalo.md`)
 
 ## 2. mérföldkő – Első működő verzió (10. hét)
-- [ ] 01 – Alapok és adatréteg (`tasks/01-foundation.md`)
+- [x] 01 – Alapok és adatréteg (`tasks/01-foundation.md`)
 - [ ] 02 – Regisztráció, belépés, JWT, hibakezelés (`tasks/02-auth.md`)
 - [ ] 03 – Jegyzet CRUD és `NoteAccessService` (`tasks/03-notes-crud.md`)
 - [ ] 04 – Mappák (`tasks/04-folders.md`)
@@ -38,3 +38,9 @@ a commitot a fejlesztő hagyja jóvá.
 
 ## Megjegyzések / nyitott kérdések
 (az agent és a fejlesztő ide írja, ami a feladatok közben felmerül)
+- 01: a design 1. szakaszában a `Migrations/` a `Data/` alatt van, a migráció a 01. feladat szerint a
+  `Notes.Api/Migrations/` alá került. Javaslat: a design fastruktúrájának pontosítása (a fejlesztő dönt).
+- 01: a `dotnet-ef` lokális tool (`dotnet-tools.json` a repó gyökerében); tiszta klónban `dotnet tool restore`
+  kell előtte – a README-be (11. feladat) felveendő.
+- 01 → 02: a `Program.cs`-ben a `UseAuthentication()` a `UseAuthorization()` elé kerüljön.
+- 01 → 05: teszt arra, hogy ugyanaz a felhasználó egy másik jegyzetre még megosztható.
