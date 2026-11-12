@@ -13,6 +13,8 @@ kikényszerítésével (a megosztások egyelőre közvetlenül az adatbázisba �
 
 ## Hatókör
 ### SZEREPEL
+- (A 02. reviewere alapján, elsőként) A tesztek felhasználónév-generálásának javítása a `.claude/rules/testing.md`
+  szerint: a rövid véletlen nevek megszüntetése, hogy a tesztek ne ütközhessenek. Csak tesztkód változik.
 - `NoteAccessService.GetRole(userId, noteId)` → `Owner | Editor | Viewer | None` (tulajdonos a `Note.OwnerId` alapján,
   egyébként a `NoteShare` alapján; mindig adatbázisból) + segédek, amelyek a művelethez szükséges szerepet kikényszerítik
   (idegen/nem létező → `NotFoundException`, kevés jog → `ForbiddenException`)

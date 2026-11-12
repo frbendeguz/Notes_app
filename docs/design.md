@@ -51,13 +51,16 @@ UserNameMax=32, PasswordMin=8, PasswordMax=128.
 ## 3. Hitelesítés
 
 - JWT Bearer (HS256). Claim-ek: `sub` = felhasználó Guid, `name` = felhasználónév. Szerep nincs a tokenben.
-- Lejárat: 60 perc, nincs refresh token. Lejárt/hibás token → 401, a kliens kijelentkeztet.
+- Lejárat: 60 perc, nincs refresh token. Lejárt/hibás token → 401, a kliens kijelentkeztet. Az ellenőrzés
+  óraeltérés-tűrés nélkül fut (`ClockSkew = 0`, V16), így a token pontosan a lejáratkor érvénytelenné válik.
+- `GET /api/auth/me` a token claimjeiből válaszol, adatbázis-lekérdezés nélkül (V17).
 - Konfiguráció: `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpiresMinutes` az `appsettings.json`-ban;
   `Jwt:Key` (legalább 32 bájt) NEM kerül a repóba: user-secrets / környezeti változó. A hiányzó
   kulcs indításkor hibát okoz. A tesztek saját kulcsot adnak.
 - Jelszó: `PasswordHasher<User>` (PBKDF2), a teljes ASP.NET Identity nélkül.
 - Belépési hiba (rossz jelszó VAGY ismeretlen felhasználó): 401, UGYANAZ a magyar hibaüzenet
-  („Hibás felhasználónév vagy jelszó."), token nem készül.
+  („Hibás felhasználónév vagy jelszó."), token nem készül. Hiányzó vagy üres mező a belépésnél szintén 401
+  ugyanezzel az üzenettel (V15); a regisztrációnál a hiányzó mező továbbra is 400.
 - Kliens: a token `sessionStorage`-ban (V13). A böngészőlap/ablak bezárásával a kliens elfelejti a tokent;
   új lapon újra be kell lépni. A szerveren a token a lejáratáig (60 perc) érvényes marad, visszavonás nincs.
   Az XSS-kockázat ugyanaz, mint `localStorage` esetén (ezt a tárolóváltás nem csökkenti).
@@ -120,7 +123,9 @@ Validációs hibánál (400) `errors` is van (mezőnév → üzenetek).
 | Foglalt felhasználónév, duplikált mappanév, ismételt megosztás | 409 |
 
 Megvalósítási elv: a service-ek kivételt dobnak (`ValidationFailedException`, `NotFoundException`,
-`ForbiddenException`, `ConflictException`), egy központi `IExceptionHandler` alakítja ProblemDetails-szé.
+`ForbiddenException`, `ConflictException`, `UnauthorizedException` – az utóbbi a belépés 401-es hibájához),
+egy központi `IExceptionHandler` alakítja ProblemDetails-szé. A JWT-middleware 401-es (`OnChallenge`) és
+403-as (`OnForbidden`) válasza is ProblemDetails.
 A DTO-k mezői nullable típusúak (`string?`), a validációt a service végzi (egységes üzenetek);
 a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú választ.
 
@@ -187,7 +192,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14, V15–V17.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -206,6 +211,10 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
   be kell lépni; a szerveroldali érvényesség és az XSS-kockázat nem változik.)
 - V14 HTTPS-átirányítás (`UseHttpsRedirection`) csak Development környezeten kívül; fejlesztéskor a Vite
   proxy HTTP-n éri el a backendet. (A 01. feladat reviewere találta a sablonmaradványt; a fejlesztő jóváhagyta.)
+- V15 Belépésnél a hiányzó vagy üres mező is 401, ugyanazzal az üzenettel, mint a rossz jelszó.
+- V16 JWT-ellenőrzés `ClockSkew = 0` (az alapértelmezett 5 perces tűrés helyett).
+- V17 A `/api/auth/me` a tokenből válaszol. Vállalt következmény: a token lejáratáig a benne lévő adat érvényes
+  marad; mivel fiók törlése és átnevezése nincs (Nem célok), ez nem okoz eltérést.
 
 ## 10. Nem célok
 

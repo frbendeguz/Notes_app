@@ -24,10 +24,13 @@ Megosztás kezelése a tulajdonosnak, és a megosztott jegyzetek szerep szerinti
 
 ## Kész, ha
 - [ ] `npm run build` és `npm run lint` hibamentes
-- [ ] kézi próba két böngészőprofillal (írd le): megosztás Olvasóként → csak olvas; Szerkesztőként → módosít, de nem töröl/oszt;
+- [ ] a kézi ellenőrzés lépései megírva a `docs/testing/manual/08.md` fájlba: számozott, reprodukálható lépések
+      elvárt eredménnyel (a böngészős próbát a fejlesztő végzi, az agent nem tud böngészőt kezelni). Lefedi:
+      két böngészőprofillal: megosztás Olvasóként → csak olvas; Szerkesztőként → módosít, de nem töröl/oszt;
       visszavonás után a frissítéskor eltűnik; nem létező felhasználó, önmaga, ismétlés hibaüzenettel
 - [ ] `dotnet test` továbbra is zöld
-- [ ] `docs/progress.md` 08 kipipálva
+- [ ] `docs/progress.md` 08 kipipálva; a fejlesztő a commit előtt végrehajtja a kézi lépéseket, és az eredményt
+      a `docs/testing/manual/08.md`-be írja (hiba esetén új munkamenetben javítjuk)
 
 ## Commit
 `Add sharing UI and role-based views to frontend`

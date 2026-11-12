@@ -121,5 +121,11 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   `git grep -i "jwt:key"`: csak kommentek és a `TestApiFactory` nyilvános tesztkulcsa (`TestJwtKey`); a fejlesztői kulcs nincs
   a repóban, az `appsettings.json`-ban nincs `Key`.
 - **Fejlesztői döntés:**
-- **Ellenőrzés (fejlesztő):**
+  - *V15 – belépésnél a hiányzó/üres mező is 401:* a belépés minden sikertelen esete ugyanazt a választ adja, így a válaszból nem derül ki, mi volt a hiba oka, és a kliensnek egy esetet kell kezelnie.
+  - *V16 – `ClockSkew = 0`:* a token pontosan a 60 perces lejáratkor érvénytelen (az alapértelmezés 5 perc ráhagyást adna), és ez tesztben egyértelműen ellenőrizhető.
+  - *V17 – a `/me` a tokenből válaszol:* nincs fölösleges adatbázis-lekérdezés; mivel fióktörlés és átnevezés nincs, a token adata nem avulhat el.
+  - *Ötödik kivételtípus (`UnauthorizedException`) és a 403-as ProblemDetails:* elfogadtam, mert így a controllerben nincs hibakezelési döntés, és minden hibaválasz egységes formátumú.
+  - *`JwtOptions.KeyMinBytes` a `Limits`-en kívül:* elfogadtam; konfigurációs biztonsági korlát, nem tartalmi.
+  - *Rövid tesztnevek ütközési kockázata:* a 03. feladat elején javíttatom, és bekerült a tesztelési szabályok közé.
+- **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 55/55 sikeres tesztet adott. A `.claude/logs/instructions.log` alapján a `.claude/rules/backend.md` a `Notes.Api` fájljainak beolvasásakor betöltődött (`path_glob_match`), tehát az útvonalhoz kötött szabályok működnek. Kézzel, futó backenden (PowerShell, `Invoke-RestMethod`) kipróbáltam a regisztrációt (201, token), a `/api/auth/me` hívást a kapott tokennel (200, a felhasználó adatai) és a rossz jelszavas belépést (401, ProblemDetails magyar hibaüzenettel).
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: belépés hiányzó mezőire 401 a 400 helyett.
