@@ -138,6 +138,31 @@ public sealed class NoteAccessServiceTests : IDisposable
         Assert.Contains(new { Id = asViewer, Role = NoteRole.Viewer }, shared);
     }
 
+    [Fact]
+    public async Task SharesOfAndShareOf_NoteWithTwoRecipients_ReturnOnlyThatNotesShares()
+    {
+        var owner = await AddUserAsync();
+        var first = await AddUserAsync();
+        var second = await AddUserAsync();
+        var note = await AddNoteAsync(owner);
+        var otherNote = await AddNoteAsync(owner);
+        await AddShareAsync(note, first, ShareRole.Viewer);
+        await AddShareAsync(note, second, ShareRole.Editor);
+        await AddShareAsync(otherNote, first, ShareRole.Editor);
+
+        await using var db = NewContext();
+        var service = new NoteAccessService(db);
+        var all = await service.SharesOf(note).Select(s => s.UserId).ToListAsync();
+        var one = await service.ShareOf(note, first).Select(s => s.Role).ToListAsync();
+        var none = await service.ShareOf(note, owner).CountAsync();
+
+        Assert.Equal(2, all.Count);
+        Assert.Contains(first, all);
+        Assert.Contains(second, all);
+        Assert.Equal([ShareRole.Viewer], one);
+        Assert.Equal(0, none);
+    }
+
     /// <summary>Returns the calling user's id and the note id for the given caller kind.</summary>
     private async Task<(Guid UserId, Guid NoteId)> ArrangeAsync(Caller caller)
     {

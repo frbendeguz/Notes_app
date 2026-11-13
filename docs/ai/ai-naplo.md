@@ -243,9 +243,14 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   nincs rá) – a javaslat szerint; (5) a megosztások listája felhasználónév szerint, `hu-HU` nélkül – a javaslat szerint;
   (6) a megosztott nézetben a `folderId` mező jelen van, `null` értékkel (V24) – a javaslat szerint; (7) a `NoteShare`-sorok
   kezelése (egy jegyzet megosztásainak listázása, ismétlés-ellenőrzés, törlés) a `ShareService`-ben a sikeres
-  `EnsureCanAsync(Share)` után, a láthatósági lekérdezés a `NoteAccessService`-ben – erre a kérdésre nem érkezett külön
-  válasz; a fejlesztő a tervet jóváhagyta, az agent a terv javaslatát követte.
-- **Eltérés a tervtől megvalósítás közben:** – A tervhez képest néhány teszttel több készült: a nem tulajdonos ismeretlen
+  `EnsureCanAsync(Share)` után, a láthatósági lekérdezés a `NoteAccessService`-ben – erre a kérdésre a jóváhagyáskor nem
+  érkezett külön válasz, az agent először a terv javaslatát követte; a beszámoló után a fejlesztő döntése: a lekérdezések
+  költözzenek a `NoteAccessService`-be (lásd az eltéréseknél).
+- **Eltérés a tervtől megvalósítás közben:** a beszámoló után a fejlesztő a 7. kérdésben a szigorú változatot választotta:
+  a `ShareService` `NoteShare`-lekérdezései (megosztások listája, ismétlés-ellenőrzés, visszavonás) a `NoteAccessService`
+  új `SharesOf(noteId)` és `ShareOf(noteId, recipientId)` metódusain keresztül futnak; a `ShareService`-ben csak az új sor
+  felvétele (`db.NoteShares.Add`) maradt. Új egységteszt: `SharesOfAndShareOf_NoteWithTwoRecipients_ReturnOnlyThatNotesShares`.
+  A szerep-ellenőrzés beágyazott feltételes kifejezése (Sonar S3358) a `ParseRole` segédmetódusba került. A tervhez képest néhány teszttel több készült: a nem tulajdonos ismeretlen
   felhasználónévvel is 403/404-et kap (nem a címzett 404-ét), olvasó érvénytelen szereppel 400 (V18), számként küldött szerep
   400, a második címzett a visszavonás után is hozzáfér, visszavonás + újramegosztás más szereppel (V4), token nélkül 401 a
   megosztás-végpontokon, a szerkesztő mentése nem veszi ki a jegyzetet a tulajdonos mappájából, valamint egy
@@ -259,15 +264,16 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   sorsuk: (1) a `progress.md` pipája hiányzott → a lezáráskor bejelölve; (2) a napló reviewer-sora helykitöltő volt → kitöltve,
   a fejlesztői sorok üresen maradtak; (3) a `.claude/rules/backend.md` szerint a többi service-ben nincs `NoteShare`-alapú
   szűrés, a `ShareService` viszont három helyen (megosztások listája, ismétlés-ellenőrzés, visszavonás) `NoteShares`-lekérdezést
-  végez, mindig a sikeres `EnsureCanAsync(Share)` után → nem módosítva, a fejlesztő kifejezett döntését kéri (7. nyitott
-  kérdés), a `progress.md`-be felvéve; (4) tesztminőség: a `ShareNote_ViewerWithInvalidRole_Returns400` és a
+  végez, mindig a sikeres `EnsureCanAsync(Share)` után → a fejlesztő döntése alapján javítva: a lekérdezések a
+  `NoteAccessService`-be költöztek (`SharesOf`, `ShareOf`); (4) tesztminőség: a `ShareNote_ViewerWithInvalidRole_Returns400` és a
   `ShareNote_NotOwnerWithUnknownUser_GetsAccessErrorNotRecipientError` nem ellenőrizte a mellékhatás hiányát, a
   `ShareNote_NumericRole_Returns400AndNoShareCreated` csak a státuszt nézte → javítva (megosztásszám-ellenőrzés; ProblemDetails
   `errors["$.role"]` „A kérés formátuma érvénytelen.” üzenettel); (5) a 2067 → 409 ágra nincs teszt → nem javítva, a
   versenyhelyzet tesztből nehezen idézhető elő; (6) a „Velem megosztott” lista másodlagos rendezése (`CreatedAt` csökkenő)
   a designban nincs rögzítve → nem módosítva, a saját lista (03) ugyanígy rendez; a design pontosítása javasolt.
 - **Ellenőrzés:** `dotnet build`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 217/217 (162 korábbi + 5 új `Share` sor és
-  1 `SharedNotes` teszt a `NoteAccessServiceTests`-ben + 49 `SharingTests`); a reviewer utáni tesztjavítások után is 217/217. Az 1–8. elfogadási feltétel mindegyikéhez van
+  1 `SharedNotes` teszt a `NoteAccessServiceTests`-ben + 49 `SharingTests`); a reviewer utáni tesztjavítások után is 217/217; a lekérdezések átköltöztetése után 218/218 (+1 `NoteAccessServiceTests`),
+  a build 0 figyelmeztetéssel. Az 1–8. elfogadási feltétel mindegyikéhez van
   `// ACn` jelölésű automatizált teszt. Kézi kipróbálás futó backenden nem történt.
 - **Fejlesztői döntés:**
 - **Ellenőrzés (fejlesztő):**

@@ -77,6 +77,16 @@ public sealed class NoteAccessService(AppDbContext db)
                 Role = s.Role == ShareRole.Editor ? NoteRole.Editor : NoteRole.Viewer,
             });
 
+    /// <summary>
+    /// The shares of one note (all recipients). Use it only after the owner check
+    /// (<see cref="EnsureCanAsync"/> with <see cref="NoteOperation.Share"/>): it does not check access itself.
+    /// </summary>
+    public IQueryable<NoteShare> SharesOf(Guid noteId) => db.NoteShares.Where(s => s.NoteId == noteId);
+
+    /// <summary>The share of one note with one recipient (0 or 1 row, unique index). Only after the owner check.</summary>
+    public IQueryable<NoteShare> ShareOf(Guid noteId, Guid recipientId) =>
+        SharesOf(noteId).Where(s => s.UserId == recipientId);
+
     /// <summary>The user's own folders. Folders are private: only the owner sees or uses them (design 4, V19).</summary>
     public IQueryable<Folder> OwnedFolders(Guid userId) => db.Folders.Where(f => f.OwnerId == userId);
 

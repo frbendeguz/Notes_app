@@ -77,10 +77,8 @@ a commitot a fejlesztő hagyja jóvá.
   `userName` → 400, formailag érvénytelen név → 404; POST sorrend: validáció → tulajdonos → címzett (404) → önmaga (400) →
   ismétlés (409); POST 201 + `ShareInfo` + `Location: /api/notes/{id}/shares/{userId}` (nincs rá GET); megosztások listája
   felhasználónév szerint; a megosztott nézetben `folderId: null`. Javaslat: a design 5. szakaszába felvenni (a fejlesztő dönt).
-- 05: NYITOTT (fejlesztői döntés kell): a `ShareService` a sikeres `EnsureCanAsync(Share)` után maga kezeli a `NoteShare`-sorokat
-  (lista, ismétlés-ellenőrzés, törlés); a `.claude/rules/backend.md` szó szerint ezt tiltja („nincs `NoteShare`-alapú
-  szűrés”). Vagy a szabály pontosítandó (láthatósági szűrés ≠ megosztássorok kezelése), vagy a lekérdezések a
-  `NoteAccessService`-be költöznek.
+- 05: fejlesztői döntés: a megosztás-sorok lekérdezései (lista, ismétlés-ellenőrzés, visszavonás) is a `NoteAccessService`-ben
+  vannak (`SharesOf`, `ShareOf`); a `ShareService` csak az új sort veszi fel. Javaslat: a design 4. szakaszába felvenni.
 - 05: a számként küldött szerep (`"role": 1`) a modellkötésnél bukik el: 400, de `errors["$.role"]` az általános „A kérés
   formátuma érvénytelen.” üzenettel. A párhuzamos ismételt megosztás (egyedi index, 2067) → 409, teszt nélkül.
 - 05 → 11: az API-leírásba: megosztás-végpontok, hibakódok, a `Location` fejléc GET nélkül, a `/api/notes/shared` rendezése

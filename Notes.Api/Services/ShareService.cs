@@ -10,7 +10,9 @@ namespace Notes.Api.Services;
 /// <summary>
 /// Sharing a note by user name, listing and revoking its shares (design 4, 5; V4, V10, V18).
 /// Every operation is owner-only: the access decision is <see cref="NoteAccessService.EnsureCanAsync"/> with
-/// <see cref="NoteOperation.Share"/>; this service only manages the share rows of a note already checked.
+/// <see cref="NoteOperation.Share"/>. Every share query (list, existence, revoke) also comes from
+/// <see cref="NoteAccessService"/> (<see cref="NoteAccessService.SharesOf"/>, <see cref="NoteAccessService.ShareOf"/>;
+/// developer decision, task 05, V19); this service only adds the new share row.
 /// There is no role change (V4): revoke and share again.
 /// </summary>
 public sealed class ShareService(AppDbContext db, NoteAccessService access)
@@ -30,8 +32,7 @@ public sealed class ShareService(AppDbContext db, NoteAccessService access)
     {
         await access.EnsureCanAsync(userId, noteId, NoteOperation.Share, ct);
 
-        return await db.NoteShares
-            .Where(s => s.NoteId == noteId)
+        return await access.SharesOf(noteId)
             .OrderBy(s => s.User.NormalizedUserName)
             .Select(s => new ShareInfo(s.UserId, s.User.UserName, s.Role))
             .ToListAsync(ct);
@@ -59,7 +60,7 @@ public sealed class ShareService(AppDbContext db, NoteAccessService access)
             throw new ValidationFailedException(new Dictionary<string, string[]> { ["userName"] = [SelfShare] });
         }
 
-        if (await db.NoteShares.AnyAsync(s => s.NoteId == noteId && s.UserId == recipient.Id, ct))
+        if (await access.ShareOf(noteId, recipient.Id).AnyAsync(ct))
         {
             throw new ConflictException(AlreadyShared);
         }
@@ -83,9 +84,7 @@ public sealed class ShareService(AppDbContext db, NoteAccessService access)
     {
         await access.EnsureCanAsync(userId, noteId, NoteOperation.Share, ct);
 
-        var deleted = await db.NoteShares
-            .Where(s => s.NoteId == noteId && s.UserId == recipientId)
-            .ExecuteDeleteAsync(ct);
+        var deleted = await access.ShareOf(noteId, recipientId).ExecuteDeleteAsync(ct);
         if (deleted == 0) throw new NotFoundException(ShareNotFound);
     }
 
@@ -101,13 +100,18 @@ public sealed class ShareService(AppDbContext db, NoteAccessService access)
         var userName = request.UserName?.Trim();
         if (string.IsNullOrEmpty(userName)) errors["userName"] = [UserNameRequired];
 
-        ShareRole? role =
-            string.Equals(request.Role, nameof(ShareRole.Viewer), StringComparison.OrdinalIgnoreCase) ? ShareRole.Viewer
-            : string.Equals(request.Role, nameof(ShareRole.Editor), StringComparison.OrdinalIgnoreCase) ? ShareRole.Editor
-            : null;
+        var role = ParseRole(request.Role);
         if (role is null) errors["role"] = [RoleInvalid];
 
         if (errors.Count > 0) throw new ValidationFailedException(errors);
         return (userName!, role!.Value);
+    }
+
+    /// <summary>"Viewer" or "Editor" in any letter case; <c>null</c> for anything else (no Enum.TryParse: it accepts "1").</summary>
+    private static ShareRole? ParseRole(string? role)
+    {
+        if (string.Equals(role, nameof(ShareRole.Viewer), StringComparison.OrdinalIgnoreCase)) return ShareRole.Viewer;
+        if (string.Equals(role, nameof(ShareRole.Editor), StringComparison.OrdinalIgnoreCase)) return ShareRole.Editor;
+        return null;
     }
 }
