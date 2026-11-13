@@ -65,11 +65,10 @@ a commitot a fejlesztő hagyja jóvá.
 - 03 → 05: a „Velem megosztott” listánál a hívó szerepét a `NoteAccessService` adja (a 03-as listában a `NoteRole.Owner`
   az `OwnedNotes` jelentéséből következik; reviewer-észrevétel).
 - 04: fejlesztői döntések: mappa-tulajdon a `NoteAccessService`-ben (`OwnedFolders`, `EnsureOwnFolderAsync`); `?folderId=`
-  idegen/nem létező mappára 404; `unfiled=false` = nincs szűrő; mappalista `OrderBy(Name)` az adatbázisban; mappába
-  helyezés nem módosítja az `UpdatedAt`-et; a `folderId` mindig a JSON-ban, nem tulajdonosnak `null`; `PUT /notes/{id}/folder`:
+  idegen/nem létező mappára 404; `unfiled=false` = nincs szűrő; mappába
+  helyezés nem módosítja az `UpdatedAt`-et; mappalista magyar ábécérendben (`hu-HU`, kis/nagybetűtől független, memóriában); a `folderId` mindig a JSON-ban, nem tulajdonosnak `null`; `PUT /notes/{id}/folder`:
   előbb jegyzet-jogosultság, utána mappa; `POST /api/folders` `Location`: `/api/folders/{id}` (nincs rá GET). Javaslat: a
   design 5. szakaszába felvenni (a fejlesztő dönt).
-- 04 → 07: a mappalista SQLite BINARY rendezésű: kisbetűs/ékezetes kezdetű nevek (pl. „alma”, „Ábel”) a „Z” után jönnek.
 - 04 → 11: az API-leírásba: a `PUT /api/notes/{id}` a törzs `folderId` mezőjét figyelmen kívül hagyja (áthelyezés:
   `PUT /api/notes/{id}/folder`); a két szűrő együtt (`folderId` + `unfiled=true`) 400, `errors.unfiled`.
 - 04: az „Árvíztűrő” és az „Arvizturo” két különböző mappanév (a `Text.Normalize` csak kis/nagybetűt egyesít, ékezetet nem);

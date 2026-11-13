@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Notes.Api.Data;
@@ -20,12 +21,22 @@ public sealed class FolderService(AppDbContext db, NoteAccessService access)
     /// <summary>SQLite extended result code of a UNIQUE constraint violation.</summary>
     private const int SqliteUniqueViolation = 2067;
 
-    /// <summary>The caller's folders ordered by name (database order, developer decision) with their note counts.</summary>
-    public async Task<IReadOnlyList<FolderSummary>> ListAsync(Guid userId, CancellationToken ct) =>
-        await access.OwnedFolders(userId)
-            .OrderBy(f => f.Name)
+    /// <summary>
+    /// Hungarian alphabetical order, case-insensitive (developer decision, task 04): "alma" and "Ábel" come with the
+    /// A's, "cs" after "c". SQLite's BINARY collation would put lower-case and accented initials after "Z", so the
+    /// (small, per-user) list is sorted in memory.
+    /// </summary>
+    private static readonly StringComparer NameOrder =
+        StringComparer.Create(CultureInfo.GetCultureInfo("hu-HU"), ignoreCase: true);
+
+    /// <summary>The caller's folders in Hungarian alphabetical order with their note counts.</summary>
+    public async Task<IReadOnlyList<FolderSummary>> ListAsync(Guid userId, CancellationToken ct)
+    {
+        var folders = await access.OwnedFolders(userId)
             .Select(f => new FolderSummary(f.Id, f.Name, f.Notes.Count))
             .ToListAsync(ct);
+        return folders.OrderBy(f => f.Name, NameOrder).ToList();
+    }
 
     public async Task<FolderSummary> CreateAsync(Guid userId, FolderCreateRequest request, CancellationToken ct)
     {

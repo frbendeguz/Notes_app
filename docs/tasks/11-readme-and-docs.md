@@ -23,9 +23,12 @@ A 2. mérföldkő („első működő verzió”) dokumentációja: indítási �
   - **tesztfuttatási útmutató:** `dotnet test`, egy teszt szűrése, `npm run build` / `npm run lint`,
     hol vannak a mentett futások
   - hivatkozások: spec, design, tesztjelentés, hibafeltárás, API-leírás, MI-használat, MI-napló
-  - ismert korlátok (a spec bizonytalanságai: nincs valós idejű szinkron, last write wins stb.)
+  - ismert korlátok (a spec bizonytalanságai: nincs valós idejű szinkron, last write wins stb.; a mappák
+    magyar sorrendjéhez a gépen kell magyar nyelvi támogatás, V22)
 - **`docs/api.md`**: a végpontok a MEGVALÓSÍTOTT kódból (nem a design-ból): metódus, útvonal,
-  jogosultság, kérés és válasz példa, hibakódok. Ha a kód eltér a `design.md` 5. szakaszától, sorold fel
+  jogosultság, kérés és válasz példa, hibakódok. Külön jelöld a dokumentált viselkedéseket: a `POST /api/folders`
+  `Location` fejlécéhez nincs `GET` végpont (V26), és a `PUT /api/notes/{id}` figyelmen kívül hagyja a `folderId`-t.
+  Ha a kód eltér a `design.md` 5. szakaszától, sorold fel
   az eltéréseket a `docs/progress.md`-ben (a design-t ne módosítsd).
 - **`docs/ai/mi-hasznalat.md`** (a README-ből hivatkozva):
   - választott eszköz és modell, felület; munkamódszer röviden (egy feladat = egy munkamenet, terv →

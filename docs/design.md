@@ -81,6 +81,8 @@ A nem létező jegyzet és az idegen jegyzet válasza megkülönböztethetetlen 
 Az ellenőrzés minden kérésnél adatbázisból történik (visszavonás azonnal hat).
 A láthatósági szűrés is a `NoteAccessService` feladata: a „saját jegyzetek” (`OwnedNotes`) és a 05. feladattól
 a „Velem megosztott” lista lekérdezése is itt készül, a `role` értékét is innen kapja a válasz (V19).
+A mappák tulajdon-ellenőrzése is itt van (`OwnedFolders`, `EnsureOwnFolderAsync`); idegen és nem létező mappa
+minden végponton ugyanazt a 404-et adja (V20).
 Nem GUID formájú azonosítóra az `{id:guid}` útvonal-megkötés miatt általános 404 jön; ez nem árul el
 semmit, mert ilyen azonosítójú jegyzet nem is létezhet.
 
@@ -110,10 +112,22 @@ DELETE /api/folders/{id}
 
 Státuszkódok (sikeres válasz): `POST` → 201 + `Location` fejléc + `NoteDetail`; `PUT` → 200 + `NoteDetail`;
 `DELETE` → 204 üres törzzsel. A mappa- és megosztás-végpontok ugyanezt a mintát követik.
+A `POST /api/folders` `Location` fejléce `/api/folders/{id}`, bár ezen az útvonalon nincs `GET` (csak `DELETE`,
+ezért egy `GET` kérés oda 405-öt kapna); ez dokumentált, vállalt eltérés (V26).
+
+Mappák és jegyzetek részletei (04. feladat):
+- `GET /api/notes?folderId=<id>`: idegen vagy nem létező mappára 404, nem üres lista (V20).
+- `unfiled=false` ugyanaz, mint a szűrő hiánya; 400 csak `folderId` + `unfiled=true` együtt (V21).
+- `GET /api/folders`: a sorrend magyar ábécé szerinti, kis- és nagybetűtől független, a rendezés memóriában
+  történik `hu-HU` kultúrával (V22).
+- `PUT /api/notes/{id}/folder`: előbb a jegyzet jogosultsága, utána a mappa ellenőrzése, így a szerkesztő idegen
+  mappára is 403-at kap, és a mappa létezéséről nem tud meg semmit (V25). Az `UpdatedAt` nem változik (V23).
+- `PUT /api/notes/{id}` a törzsben küldött `folderId`-t figyelmen kívül hagyja; mappát csak a `/folder` végpont vált.
+- Ha a mappát egy másik kérés közben törlik, a mappába helyezés és a mappás létrehozás is 404-et ad (nem 500-at).
 
 Válasz-DTO-k:
-- `NoteSummary`: `id, title, updatedAt, role, ownerUserName, folderId?` (a `folderId` csak a tulajdonosnak;
-  a mező a 04. feladatban kerül be, addig nem része a válasznak)
+- `NoteSummary`: `id, title, updatedAt, role, ownerUserName, folderId` (a 04. feladattól a mező mindig jelen van;
+  a tulajdonosnak a tényleges érték vagy `null`, a nem tulajdonosnak mindig `null`, V24)
 - `NoteDetail`: `NoteSummary` + `content, createdAt`
 - `ShareInfo`: `userId, userName, role`
 - A `role` és `ShareRole` JSON-ban string: `"Owner" | "Editor" | "Viewer"` (`JsonStringEnumConverter`).
@@ -143,7 +157,9 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
 - Cím: `Trim()` után 1–100 karakter; a levágott értéket tároljuk. Csak szóközből álló cím → 400.
 - Szöveg: 0–10 000 karakter, nem trimmeljük; hiányzó (null) szöveg → 400, üres string megengedett.
 - Karakterszámolás: `string.Length` (UTF-16 kódegység).
-- Mappanév: `Trim()` után 1–50; egyediség `Text.Normalize` alapján felhasználónként.
+- Mappanév: `Trim()` után 1–50; egyediség `Text.Normalize` alapján felhasználónként. A normalizálás csak a kis- és
+  nagybetűt egyesíti, az ékezetet nem: az „Árvíztűrő” és az „árvíztűrő” ütközik, az „Árvíztűrő” és az
+  „Arvizturo” két külön név (V27).
 - Felhasználónév: `Trim()` után 3–32 karakter, csak `A–Z a–z 0–9 _ . -`; egyediség `Text.Normalize` alapján.
 - Jelszó: 8–128 karakter, és legalább egy kisbetű, egy nagybetű és egy számjegy (0–9). A kis- és
   nagybetű Unicode szerint értendő (`char.IsLower` / `char.IsUpper`, így az „á” és az „Á” is számít).
@@ -201,7 +217,8 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V19.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V26.
+Megerősítésre vár: V27.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -227,8 +244,20 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V18 Módosító kérésnél a validáció a jogosultság-ellenőrzés előtt fut. Következmény: érvénytelen törzsre az olvasó,
   az idegen és a nem létező jegyzet is 400-at kap (nem 403/404-et). Ez nem árul el semmit a jegyzet létezéséről,
   mert minden esetben azonos, és a spec 6. feltételével sem ütközik, mert ott a kérés érvényes.
-- V19 Minden jogosultsági és láthatósági döntés a `NoteAccessService`-ben van, a listák szűrése is
-  (a fejlesztő döntése: a `NoteService` nem szűrhet `OwnerId` alapján).
+- V19 Minden jogosultsági és láthatósági döntés a `NoteAccessService`-ben van, a listák szűrése és a mappák
+  tulajdon-ellenőrzése is (a fejlesztő döntése: a többi service nem szűrhet `OwnerId` alapján).
+- V20 Idegen és nem létező mappa mindenhol 404 (szűrő, létrehozás mappával, áthelyezés, törlés), üres lista helyett is.
+- V21 `unfiled=false` = nincs szűrő; csak a `folderId` + `unfiled=true` együttes megadása 400.
+- V22 A mappalista magyar ábécé szerint, kis- és nagybetűtől függetlenül rendezett, memóriában, `hu-HU` kultúrával.
+  (A fejlesztő először az adatbázisbeli `OrderBy(Name)`-et választotta, majd a reviewer jelzése alapján, miszerint a
+  kisbetűs és ékezetes nevek a „Z” után kerülnének, erre módosította.) Vállalt következmény: a sorrend a futtató
+  gép magyar nyelvi támogatásától (ICU) függ; `InvariantGlobalization` nem kapcsolható be.
+- V23 A mappába helyezés nem frissíti az `UpdatedAt`-et, mert a jegyzet tartalma nem változik.
+- V24 A `folderId` mindig jelen van a jegyzetválaszban; a nem tulajdonosnak `null`.
+- V25 `PUT /api/notes/{id}/folder`: előbb a jegyzet jogosultsága, utána a mappa ellenőrzése.
+- V26 A `POST /api/folders` `Location` fejléce `/api/folders/{id}`, `GET` végpont nélkül.
+- V27 A mappanév egyedisége csak a kis- és nagybetűt hagyja figyelmen kívül, az ékezetet nem (a spec csak
+  kis- és nagybetű-függetlenséget ír elő). Megerősítésre vár.
 
 ## 10. Nem célok
 

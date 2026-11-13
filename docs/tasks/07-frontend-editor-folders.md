@@ -16,7 +16,7 @@ A tulajdonos létrehozhat, szerkeszthet, törölhet jegyzetet, kezelheti a mapp�
 - Szerkesztő nézet: cím és szöveg, karakterszámlálók (x/100, x/10 000), Mentés, Törlés (megerősítéssel)
 - A szerver hibaüzenetének (`detail`, `errors`) megjelenítése; sikertelen mentés után a szerkesztő ne veszítse el a beírt szöveget
 - Kliensoldali segítő validáció (üres/szóközös cím, hosszkorlát) – a szerveri validáció marad a mérvadó
-- Mappák az oldalsávban: lista (`noteCount`-tal), létrehozás, törlés (megerősítéssel; a jegyzetek megmaradnak), szűrés mappa szerint és „Mappa nélküli”
+- Mappák az oldalsávban: lista (`noteCount`-tal; a sorrendet az API adja magyar ábécé szerint, a kliens ne rendezze újra, V22), létrehozás, törlés (megerősítéssel; a jegyzetek megmaradnak), szűrés mappa szerint és „Mappa nélküli”
 - Jegyzet mappába helyezése / mappából kivétele (`PUT /api/notes/{id}/folder`)
 - Mentés/törlés után a lista és a mappaszámlálók frissülnek (query invalidálás)
 

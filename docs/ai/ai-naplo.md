@@ -184,7 +184,7 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   (1) a mappa-tulajdon ellenőrzése a `NoteAccessService`-ben (`OwnedFolders`, `EnsureOwnFolderAsync`) – a javaslat szerint;
   (2) `?folderId=` idegen/nem létező mappára 404 – a javaslat szerint; (3) `unfiled=false` = nincs szűrő – a javaslat
   szerint; (4) mappalista rendezése: egyszerű `OrderBy(Name)` az adatbázisban – az agent `hu-HU` kultúrás memóriabeli
-  rendezést javasolt, a fejlesztő az egyszerűbbet választotta; (5) mappába helyezés nem módosítja az `UpdatedAt`-et –
+  rendezést javasolt, a fejlesztő az egyszerűbbet választotta (a reviewer után módosítva, lásd lent); (5) mappába helyezés nem módosítja az `UpdatedAt`-et –
   a javaslat szerint; (6) a `folderId` mező mindig ott van a JSON-ban, nem tulajdonosnak `null` – a javaslat szerint;
   (7) a `PUT /notes/{id}/folder`-nél előbb a jegyzet jogosultsága, utána a mappa – a javaslat szerint.
 - **Eltérés a tervtől megvalósítás közben:** megvalósítás közben felmerült kérdés: a `POST /api/folders` `Location`
@@ -205,13 +205,24 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   FK-hibát 404-re fordítja (teszt nincs rá, a versenyhelyzet tesztből nehezen idézhető elő); (2) a `PUT /api/notes/{id}`
   csendben figyelmen kívül hagyja a `folderId`-t → nem javítva, a 11. feladat API-leírásába felveendő (`progress.md`);
   (3) az `OrderBy(Name)` SQLite BINARY rendezése miatt a kisbetűs és ékezetes kezdetű nevek a „Z” után jönnek →
-  nem javítva, fejlesztői döntés; a 07. feladatnál szempont lehet (`progress.md`); (4) a nem GUID `folderId` teszt csak
+  a fejlesztő a beszámoló után módosította a döntését: a lista magyar ábécérend szerint, kis/nagybetűtől függetlenül
+  rendezett (`StringComparer.Create(hu-HU, ignoreCase)`, memóriában a lekérdezés után) → megvalósítva, új teszt:
+  `ListFolders_MixedCaseAndAccentedNames_HungarianAlphabeticalOrder` (pl. „Ábel”, „alma” az A-knál, „cs” a „c” után); (4) a nem GUID `folderId` teszt csak
   a státuszt nézte → kiegészítve (ProblemDetails `errors.folderId` és üzenet); (5) a teszt rögzíti, hogy az „Árvíztűrő”
   és az „Arvizturo” különböző név → nem módosítva, ez a `Text.Normalize` (D2) következménye, a fejlesztő megerősítheti;
   (6) a 2067 → 409 ágra nincs teszt → nem javítva, a naplóban jelezve.
 - **Ellenőrzés:** `dotnet build`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 161/161 (121 korábbi + 5 új `MoveToFolder`
-  sor a `NoteAccessServiceTests`-ben + 35 `FoldersTests`), a reviewer utáni javítások után is 161/161.
+  sor a `NoteAccessServiceTests`-ben + 35 `FoldersTests`), a reviewer utáni javítások után is 161/161; a magyar
+  rendezés után 162/162 (36 `FoldersTests`).
   Kézi kipróbálás futó backenden nem történt.
 - **Fejlesztői döntés:**
-- **Ellenőrzés (fejlesztő):**
-- **Döntési eset jelölt?** (a fejlesztő dönt)
+  - *Mappa-tulajdon ellenőrzése:* a `NoteAccessService`-be került (`OwnedFolders`, `EnsureOwnFolderAsync`), nem a `FolderService`-be, hogy minden jogosultsági döntés egy helyen maradjon (V19).
+  - *Idegen vagy nem létező mappa szűrőként:* 404, nem üres lista, egységesen a „más felhasználó mappája → 404” szabállyal (V20). Az üres lista nem különböztetné meg a hibás azonosítót egy valóban üres mappától.
+  - *`unfiled=false`:* ugyanaz, mint a szűrő hiánya; 400 csak a `folderId` + `unfiled=true` ellentmondó párosra (V21).
+  - *Mappalista rendezése:* először az egyszerű, adatbázisbeli `OrderBy(Name)`-et választottam. A reviewer jelezte, hogy így a kisbetűs és az ékezetes kezdőbetűs nevek a „Z” után kerülnek, ami magyar felhasználónak hibásnak tűnik. Ezért módosítottam: memóriában, `hu-HU` kultúrával, kis- és nagybetűtől függetlenül rendez. A teljesítmény nem gond, mert egy felhasználónak kevés mappája van. Vállalt következmény: a sorrend a gép magyar nyelvi támogatásától függ (V22). Bizonyíték: `ListFolders_MixedCaseAndAccentedNames_HungarianAlphabeticalOrder`, amely a régi rendezéssel elbukna.
+  - *`UpdatedAt` mappába helyezéskor:* nem frissül, mert a jegyzet tartalma nem változik, és így a lista sorrendje sem ugrik (V23).
+  - *`folderId` a nem tulajdonosnak:* a mező mindig jelen van, de `null`; így a kliens egyféle válaszformát kezel, és a tulajdonos mappaszerkezetéről semmi nem szivárog ki (V24).
+  - *Ellenőrzési sorrend az áthelyezésnél:* előbb a jegyzet jogosultsága, utána a mappa; így a szerkesztő idegen mappára is 403-at kap, és nem tudja meg, létezik-e a mappa (V25).
+  - *`Location` fejléc:* `/api/folders/{id}`, bár `GET` végpont nincs rá; az azonosító így is egyértelműen jelöli a létrehozott mappát, az eltérés az API-leírásban dokumentált (V26).
+- **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 162/162 sikeres tesztet adott.
+- **Döntési eset jelölt?** igen – a mappalista rendezése: a saját első döntésemet a reviewer észrevétele alapján módosítottam, és az új viselkedést egy teszt bizonyítja, amely a régi változaton elbukna.

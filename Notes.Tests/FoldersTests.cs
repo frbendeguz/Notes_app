@@ -163,6 +163,22 @@ public sealed class FoldersTests(TestApiFactory factory) : IClassFixture<TestApi
             folders);
     }
 
+    // Developer decision (task 04): Hungarian alphabetical order, case-insensitive. Lower-case and accented initials
+    // are NOT put after "Z" (as SQLite BINARY order would do); "cs" is a separate letter after "c".
+    [Fact]
+    public async Task ListFolders_MixedCaseAndAccentedNames_HungarianAlphabeticalOrder()
+    {
+        var user = await AuthHelper.CreateUserAsync(factory);
+        foreach (var name in new[] { "Zene", "öröm", "csiga", "Ábel", "cukor", "alma", "Bor", "Ősz", "Olló", "écska", "Egér" })
+        {
+            await CreateFolderAsync(user, name);
+        }
+
+        var names = (await ListFoldersAsync(user.Client)).Select(f => f.Name);
+
+        Assert.Equal(["Ábel", "alma", "Bor", "cukor", "csiga", "écska", "Egér", "Olló", "öröm", "Ősz", "Zene"], names);
+    }
+
     // ---------- Note into folder, filters ----------
 
     // AC8
