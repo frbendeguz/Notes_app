@@ -79,6 +79,10 @@ UserNameMax=32, PasswordMin=8, PasswordMax=128.
 
 A nem létező jegyzet és az idegen jegyzet válasza megkülönböztethetetlen (404, azonos törzs).
 Az ellenőrzés minden kérésnél adatbázisból történik (visszavonás azonnal hat).
+A láthatósági szűrés is a `NoteAccessService` feladata: a „saját jegyzetek” (`OwnedNotes`) és a 05. feladattól
+a „Velem megosztott” lista lekérdezése is itt készül, a `role` értékét is innen kapja a válasz (V19).
+Nem GUID formájú azonosítóra az `{id:guid}` útvonal-megkötés miatt általános 404 jön; ez nem árul el
+semmit, mert ilyen azonosítójú jegyzet nem is létezhet.
 
 ## 5. REST API
 
@@ -104,14 +108,19 @@ POST   /api/folders                  {name}
 DELETE /api/folders/{id}
 ```
 
+Státuszkódok (sikeres válasz): `POST` → 201 + `Location` fejléc + `NoteDetail`; `PUT` → 200 + `NoteDetail`;
+`DELETE` → 204 üres törzzsel. A mappa- és megosztás-végpontok ugyanezt a mintát követik.
+
 Válasz-DTO-k:
-- `NoteSummary`: `id, title, updatedAt, role, ownerUserName, folderId?` (a `folderId` csak a tulajdonosnak)
+- `NoteSummary`: `id, title, updatedAt, role, ownerUserName, folderId?` (a `folderId` csak a tulajdonosnak;
+  a mező a 04. feladatban kerül be, addig nem része a válasznak)
 - `NoteDetail`: `NoteSummary` + `content, createdAt`
 - `ShareInfo`: `userId, userName, role`
 - A `role` és `ShareRole` JSON-ban string: `"Owner" | "Editor" | "Viewer"` (`JsonStringEnumConverter`).
 
 Hibakezelés: minden hiba ProblemDetails; a `detail` a felhasználónak szánt magyar üzenet.
 Validációs hibánál (400) `errors` is van (mezőnév → üzenetek).
+Feldolgozási sorrend módosító kérésnél: 1. a kérés validációja, 2. jogosultság-ellenőrzés, 3. módosítás (V18).
 
 | Eset | Kód |
 |---|---|
@@ -192,7 +201,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14, V15–V17.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V19.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -215,6 +224,11 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V16 JWT-ellenőrzés `ClockSkew = 0` (az alapértelmezett 5 perces tűrés helyett).
 - V17 A `/api/auth/me` a tokenből válaszol. Vállalt következmény: a token lejáratáig a benne lévő adat érvényes
   marad; mivel fiók törlése és átnevezése nincs (Nem célok), ez nem okoz eltérést.
+- V18 Módosító kérésnél a validáció a jogosultság-ellenőrzés előtt fut. Következmény: érvénytelen törzsre az olvasó,
+  az idegen és a nem létező jegyzet is 400-at kap (nem 403/404-et). Ez nem árul el semmit a jegyzet létezéséről,
+  mert minden esetben azonos, és a spec 6. feltételével sem ütközik, mert ott a kérés érvényes.
+- V19 Minden jogosultsági és láthatósági döntés a `NoteAccessService`-ben van, a listák szűrése is
+  (a fejlesztő döntése: a `NoteService` nem szűrhet `OwnerId` alapján).
 
 ## 10. Nem célok
 

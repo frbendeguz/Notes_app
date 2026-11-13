@@ -9,7 +9,10 @@ paths:
   jogosultsági döntés nincs benne.
 - Jogosultság: `NoteAccessService.GetRole(userId, noteId)` → `Owner | Editor | Viewer | None`, minden
   kérésnél adatbázisból. A tokenben csak a felhasználó azonosítója és neve van, szerep soha.
-  Idegen és nem létező jegyzet válasza azonos (404).
+  Idegen és nem létező jegyzet válasza azonos (404). A listák láthatósági szűrése (saját, velem megosztott)
+  és a válaszban szereplő `role` is a `NoteAccessService`-ből jön (V19); a többi service-ben nincs
+  `OwnerId`- vagy `NoteShare`-alapú szűrés.
+- Módosító kérés sorrendje: validáció → jogosultság → módosítás (V18).
 - Entitást soha ne adj vissza az API-ból, mindig DTO. Enum JSON-ban stringként (`JsonStringEnumConverter`).
 - Hibakezelés: a service-ek kivételt dobnak (`ValidationFailedException`, `NotFoundException`,
   `ForbiddenException`, `ConflictException`), a központi `IExceptionHandler` alakítja ProblemDetails-szé.

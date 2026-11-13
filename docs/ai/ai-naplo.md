@@ -162,7 +162,13 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   43 `NotesTests`); `grep` a `NotesController`-ben és a `NoteService`-ben: nincs
   `NoteShare`-, szerep- vagy `OwnerId`-alapú hozzáférési döntés (az `OwnerId = userId` a létrehozáskor a tulajdonost
   állítja be). Kézi kipróbálás futó backenden nem történt.
-- **Fejlesztői döntés:**
-- **Ellenőrzés (fejlesztő):**
+- **Fejlesztői döntés:** 
+  - *Jogosultsági és láthatósági szűrés:* a terv a saját jegyzetek listájának `OwnerId` szerinti szűrését a
+    `NoteService`-ben hagyta volna. Ezt módosítottam: a design szerint minden jogosultsági döntés a `NoteAccessService`-ben van, ezért a lista szűrése is oda került (`OwnedNotes`). Így a 05. feladat „Velem megosztott” listája is ugyanerre a helyre épül, és nem alakul ki párhuzamos jogosultsági logika (V19).
+  - *`folderId` a válasz-DTO-kban:* kimarad a 04. feladatig, mert a mappák ott készülnek el; most csak mindig `null` értéket adna vissza.
+  - *Státuszkódok:* elfogadtam a javaslatot (`POST` → 201 + `Location` + `NoteDetail`, `PUT` → 200 + `NoteDetail`, `DELETE` → 204), mert ez a szokásos REST-konvenció, és a kliens a létrehozott jegyzetet újabb lekérés nélkül megkapja.
+  - *Validáció a jogosultság-ellenőrzés előtt:* elfogadtam (V18). Érvénytelen törzsre az olvasó, az idegen és a nem létező jegyzet is 400-at kap; ez nem árul el semmit a jegyzet létezéséről, mert minden esetben azonos, és a spec 6. feltételével sem ütközik, mert ott a kérés érvényes. A döntést a `UpdateNote_ViewerWithInvalidBody_Returns400AndNoteUnchanged` teszt rögzíti.
+  - *Az agent saját döntései* (általános 404 nem GUID azonosítóra, a hibaüzenetek szövege): elfogadtam.
+- **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 121/121 sikeres tesztet adott.
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: a validáció a jogosultság-ellenőrzés előtt fut
   (az olvasó érvénytelen PUT-ja 400-at kap 403 helyett).

@@ -19,7 +19,8 @@ Jegyzet megosztása felhasználónév alapján olvasó vagy szerkesztő joggal, 
   - érvénytelen szerep → 400
 - `GET /api/notes/{id}/shares`: csak tulajdonos (`[{userId, userName, role}]`)
 - `DELETE /api/notes/{id}/shares/{userId}`: csak tulajdonos; nem létező megosztás → 404; a jegyzet a tulajdonosnál megmarad
-- `GET /api/notes/shared`: a velem megosztott jegyzetek (`NoteSummary`, `role`, `ownerUserName`, `folderId` NÉLKÜL), `UpdatedAt` szerint csökkenő
+- `GET /api/notes/shared`: a velem megosztott jegyzetek (`NoteSummary`, `role`, `ownerUserName`, `folderId` NÉLKÜL), `UpdatedAt` szerint csökkenő.
+  A lekérdezés és a `role` értéke a `NoteAccessService`-ből jön (V19), nem beégetett érték (a 03. reviewere alapján)
 - Visszavonás után a címzett a következő kérésnél már nem látja és nem éri el a jegyzetet (404)
 
 ### NEM szerepel
@@ -27,7 +28,7 @@ Jegyzet megosztása felhasználónév alapján olvasó vagy szerkesztő joggal, 
 - Frontend
 
 ## Kötött döntések
-V1, V4, V10. A jogosultság továbbra is adatbázisból, a `NoteAccessService`-en keresztül dől el (nincs gyorsítótár).
+V1, V4, V10, V18, V19. A jogosultság továbbra is adatbázisból, a `NoteAccessService`-en keresztül dől el (nincs gyorsítótár).
 
 ## Tesztek (`SharingTests`)
 - Megosztás Olvasóként és Szerkesztőként → a címzett a „Velem megosztott” listában látja, és olvashatja (5. feltétel)
