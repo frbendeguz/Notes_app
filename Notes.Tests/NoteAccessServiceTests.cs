@@ -73,6 +73,11 @@ public sealed class NoteAccessServiceTests : IDisposable
     [InlineData(Caller.MissingNote, NoteOperation.Read, typeof(NotFoundException))]
     [InlineData(Caller.MissingNote, NoteOperation.Edit, typeof(NotFoundException))]
     [InlineData(Caller.MissingNote, NoteOperation.Delete, typeof(NotFoundException))]
+    [InlineData(Caller.Owner, NoteOperation.MoveToFolder, null)]
+    [InlineData(Caller.Editor, NoteOperation.MoveToFolder, typeof(ForbiddenException))]
+    [InlineData(Caller.Viewer, NoteOperation.MoveToFolder, typeof(ForbiddenException))]
+    [InlineData(Caller.Stranger, NoteOperation.MoveToFolder, typeof(NotFoundException))]
+    [InlineData(Caller.MissingNote, NoteOperation.MoveToFolder, typeof(NotFoundException))]
     public async Task EnsureCan_CallerAndOperation_FollowsMatrix(Caller caller, NoteOperation operation, Type? expectedException)
     {
         var (userId, noteId) = await ArrangeAsync(caller);

@@ -13,6 +13,7 @@ public sealed class NoteAccessService(AppDbContext db)
 {
     public const string NoteNotFoundMessage = "A jegyzet nem található.";
     public const string ForbiddenMessage = "Nincs jogosultságod ehhez a művelethez.";
+    public const string FolderNotFoundMessage = "A mappa nem található.";
 
     /// <summary>Owner by <c>Note.OwnerId</c>, otherwise the share role; <see cref="NoteRole.None"/> for a stranger or a missing note.</summary>
     public async Task<NoteRole> GetRoleAsync(Guid userId, Guid noteId, CancellationToken ct)
@@ -55,9 +56,25 @@ public sealed class NoteAccessService(AppDbContext db)
         NoteOperation.Read => role is NoteRole.Owner or NoteRole.Editor or NoteRole.Viewer,
         NoteOperation.Edit => role is NoteRole.Owner or NoteRole.Editor,
         NoteOperation.Delete => role is NoteRole.Owner,
+        NoteOperation.MoveToFolder => role is NoteRole.Owner,
         _ => false,
     };
 
     /// <summary>The notes the user owns ("saját jegyzetek"); the caller's role on each of them is <see cref="NoteRole.Owner"/>.</summary>
     public IQueryable<Note> OwnedNotes(Guid userId) => db.Notes.Where(n => n.OwnerId == userId);
+
+    /// <summary>The user's own folders. Folders are private: only the owner sees or uses them (design 4, V19).</summary>
+    public IQueryable<Folder> OwnedFolders(Guid userId) => db.Folders.Where(f => f.OwnerId == userId);
+
+    /// <summary>
+    /// Ensures that the folder exists and belongs to the user. A foreign and a missing folder give the same
+    /// <see cref="NotFoundException"/> (same response, V1).
+    /// </summary>
+    public async Task EnsureOwnFolderAsync(Guid userId, Guid folderId, CancellationToken ct)
+    {
+        if (!await OwnedFolders(userId).AnyAsync(f => f.Id == folderId, ct))
+        {
+            throw new NotFoundException(FolderNotFoundMessage);
+        }
+    }
 }

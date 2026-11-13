@@ -4,14 +4,15 @@ using Notes.Api.Services;
 
 namespace Notes.Api.Controllers;
 
-/// <summary>Note CRUD (design 5). Thin: access and validation are decided in the services.</summary>
+/// <summary>Note CRUD and moving a note into a folder (design 5). Thin: access and validation are decided in the services.</summary>
 [ApiController]
 [Route("api/notes")]
 public sealed class NotesController(NoteService noteService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<NoteSummary>>> List(CancellationToken ct) =>
-        Ok(await noteService.ListOwnAsync(User.GetUserId(), ct));
+    public async Task<ActionResult<IReadOnlyList<NoteSummary>>> List(
+        [FromQuery] Guid? folderId, [FromQuery] bool? unfiled, CancellationToken ct) =>
+        Ok(await noteService.ListOwnAsync(User.GetUserId(), folderId, unfiled, ct));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<NoteDetail>> Get(Guid id, CancellationToken ct) =>
@@ -27,6 +28,10 @@ public sealed class NotesController(NoteService noteService) : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<NoteDetail>> Update(Guid id, NoteWriteRequest request, CancellationToken ct) =>
         Ok(await noteService.UpdateAsync(User.GetUserId(), id, request, ct));
+
+    [HttpPut("{id:guid}/folder")]
+    public async Task<ActionResult<NoteDetail>> MoveToFolder(Guid id, NoteFolderRequest request, CancellationToken ct) =>
+        Ok(await noteService.MoveToFolderAsync(User.GetUserId(), id, request, ct));
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

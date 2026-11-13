@@ -172,3 +172,46 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 121/121 sikeres tesztet adott.
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: a validáció a jogosultság-ellenőrzés előtt fut
   (az olvasó érvénytelen PUT-ja 400-at kap 403 helyett).
+
+## 04 – Mappák (2026-11-13)
+- **Fázis:** megvalósítás
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/04-folders.md`, a design 2., 4., 5., 6. szakasza, D2, D4, V7 (és V1, V18, V19); a spec 8.
+  elfogadási feltétele; CLAUDE.md, `.claude/rules/backend.md`, `.claude/rules/testing.md`.
+- **Terv és módosításai:** az agent terve: `FolderService` + `FoldersController`, `FolderDtos`; `NoteOperation.MoveToFolder`;
+  a `NoteAccessService` bővítése; `NoteService` szűrők, `folderId` a létrehozásnál, `MoveToFolderAsync`; `folderId` a
+  `NoteSummary`/`NoteDetail`-ben; nincs új csomag és migráció. Hét nyitott kérdés, a fejlesztő döntései:
+  (1) a mappa-tulajdon ellenőrzése a `NoteAccessService`-ben (`OwnedFolders`, `EnsureOwnFolderAsync`) – a javaslat szerint;
+  (2) `?folderId=` idegen/nem létező mappára 404 – a javaslat szerint; (3) `unfiled=false` = nincs szűrő – a javaslat
+  szerint; (4) mappalista rendezése: egyszerű `OrderBy(Name)` az adatbázisban – az agent `hu-HU` kultúrás memóriabeli
+  rendezést javasolt, a fejlesztő az egyszerűbbet választotta; (5) mappába helyezés nem módosítja az `UpdatedAt`-et –
+  a javaslat szerint; (6) a `folderId` mező mindig ott van a JSON-ban, nem tulajdonosnak `null` – a javaslat szerint;
+  (7) a `PUT /notes/{id}/folder`-nél előbb a jegyzet jogosultsága, utána a mappa – a javaslat szerint.
+- **Eltérés a tervtől megvalósítás közben:** megvalósítás közben felmerült kérdés: a `POST /api/folders` `Location`
+  fejlécének nincs létező GET végpontja; a fejlesztő döntése: `/api/folders/{id}` (az agent javaslata). További
+  megvalósítási részletek: a `NoteWriteRequest` kapott egy opcionális `FolderId` mezőt (alapértéke `null`), amelyet a
+  `PUT /api/notes/{id}` figyelmen kívül hagy; a mappanév-ütközést a `FolderService` az ellenőrzés után az egyedi index
+  megsértésekor (`SqliteExtendedErrorCode` 2067) is 409-re fordítja (versenyhelyzet), erre nincs teszt; a mappa törlése
+  egy `ExecuteDeleteAsync` hívás az `OwnedFolders` szűrésen, 0 törölt sor → 404; a jegyzetek mappa nélkülivé tétele az
+  adatbázis `ON DELETE SET NULL` szabályán múlik. A két szűrő együtt adott 400-as hibája az `errors.unfiled` mezőn jelenik meg.
+  A tervhez képest néhány teszttel több készült (pl. trim + max hossz, ékezet nélküli név nem duplikátum, `unfiled=false`,
+  nem GUID `folderId` → 400, token nélkül 401, `UpdatedAt` változatlan).
+- **Blokkolt műveletek (hook/jogosultság):** –
+- **Elbukó tesztek valódi hiba miatt:** – (az első futáskor fordítási hiba volt a tesztben – típus nélküli collection
+  expression `.Order()` hívással –, javítás után minden teszt elsőre átment; mentett futás nincs).
+- **Reviewer megállapításai:** ítélet: „lezárható”, blokkoló hiba nincs (nyitott pont csak a `progress.md` pipája és a
+  napló kitöltése). Nem blokkolók és sorsuk: (1) a mappa ellenőrzése és a mentés között párhuzamosan törölt mappa
+  FK-hibát (500) okozna a `CreateAsync`/`MoveToFolderAsync`-ban → javítva: `SaveWithFolderAsync` a 787-es SQLite
+  FK-hibát 404-re fordítja (teszt nincs rá, a versenyhelyzet tesztből nehezen idézhető elő); (2) a `PUT /api/notes/{id}`
+  csendben figyelmen kívül hagyja a `folderId`-t → nem javítva, a 11. feladat API-leírásába felveendő (`progress.md`);
+  (3) az `OrderBy(Name)` SQLite BINARY rendezése miatt a kisbetűs és ékezetes kezdetű nevek a „Z” után jönnek →
+  nem javítva, fejlesztői döntés; a 07. feladatnál szempont lehet (`progress.md`); (4) a nem GUID `folderId` teszt csak
+  a státuszt nézte → kiegészítve (ProblemDetails `errors.folderId` és üzenet); (5) a teszt rögzíti, hogy az „Árvíztűrő”
+  és az „Arvizturo” különböző név → nem módosítva, ez a `Text.Normalize` (D2) következménye, a fejlesztő megerősítheti;
+  (6) a 2067 → 409 ágra nincs teszt → nem javítva, a naplóban jelezve.
+- **Ellenőrzés:** `dotnet build`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 161/161 (121 korábbi + 5 új `MoveToFolder`
+  sor a `NoteAccessServiceTests`-ben + 35 `FoldersTests`), a reviewer utáni javítások után is 161/161.
+  Kézi kipróbálás futó backenden nem történt.
+- **Fejlesztői döntés:**
+- **Ellenőrzés (fejlesztő):**
+- **Döntési eset jelölt?** (a fejlesztő dönt)

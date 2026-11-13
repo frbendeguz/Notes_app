@@ -55,6 +55,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<NoteAccessService>();
 builder.Services.AddScoped<NoteService>();
+builder.Services.AddScoped<FolderService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 
