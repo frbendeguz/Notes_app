@@ -125,17 +125,26 @@ Mielőtt telepítesz:
 
 1. **Nézd át a tartalmát.** A pluginok hookokat, scripteket és MCP-szervereket is hozhatnak, amelyek a te
    jogosultságaiddal futnak. Telepítés előtt a részletek nézet megmutatja, mit ad hozzá.
-2. **Ütközés a projekt szabályaival.** A `.claude/rules/frontend.md` jelenleg sima CSS-t ír elő UI-könyvtár
-   nélkül. Ha egy UI-design skill Tailwindet vagy komponenskönyvtárat javasol, a kettő ütközik. Vagy a
-   skill igazodik a szabályhoz (mondd meg neki), vagy tudatosan módosítod a `design.md` 7. szakaszát és a
-   frontend-szabályt, és ezt a naplóban döntésként rögzíted.
+2. **Ütközés a projekt szabályaival.** Egy külső skill a saját ízlése szerint javasolhat könyvtárat vagy
+   megoldást. A projektben a `.claude/rules/frontend.md` az erősebb (Tailwind, komponenskönyvtár nélkül, V33).
+   Ha ettől el akarsz térni, módosítsd tudatosan a `design.md` 7. szakaszát és a frontend-szabályt, és rögzítsd
+   döntésként a naplóban.
 3. **Dokumentáld.** A követelmények az MI-t támogató elemeket külön pontozzák; a telepített plugin vagy
    skill kerüljön be a `docs/ai/mi-hasznalat.md`-be (honnan van, mire használtad, hol látszik az eredménye).
 4. **Ne terheld feleslegesen a kontextust.** Csak azt telepítsd, amit tényleg használsz; a nem használt
    pluginokat a `/plugin` Installed fülén letilthatod.
 
-Ebben a projektben két plugin lehet hasznos: a `frontend-design` (a hivatalos marketplace-en, UI-tervezéshez,
-a 06–08. feladathoz), valamint a `csharp-lsp` és a `typescript-lsp` (kódintelligencia: Claude szerkesztés után
+### A `frontend-design` telepítése (a 06. feladat előtt)
+
+1. Claude Code-ban: `/plugin install frontend-design@claude-plugins-official`, vagy VS Code-ban a „Manage plugins”
+   ablakban keresd meg. Hatókörnek a **Project**-et válaszd, így a `.claude/settings.json`-ba kerül, és a repóban
+   is látszik, hogy a projekt használja.
+2. Telepítés után indíts új munkamenetet, és ellenőrizd: Claude-ot kérdezd meg, milyen skillek érhetők el.
+3. Commitold a `.claude/settings.json` változását külön commitban, a V33-mal együtt.
+4. A skill a frontend munkánál magától betöltődik; a 06. feladat tervében az agent leírja a vizuális irányt,
+   amit jóváhagysz.
+
+Ezen felül hasznos lehet a `csharp-lsp` és a `typescript-lsp` (kódintelligencia: Claude szerkesztés után
 azonnal látja a fordítási hibákat; a `csharp-ls`, illetve a `typescript-language-server` programot külön
 kell telepíteni).
 

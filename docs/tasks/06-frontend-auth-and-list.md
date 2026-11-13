@@ -13,7 +13,8 @@ megosztott jegyzetek listája (egyelőre csak olvasható lista).
 
 ## Hatókör
 ### SZEREPEL
-- Vite + React + TypeScript projekt a `notes-web/` mappában; csomagok: `react-router-dom`, `@tanstack/react-query`
+- Vite + React + TypeScript projekt a `notes-web/` mappában; csomagok: `react-router-dom`, `@tanstack/react-query`,
+  `tailwindcss`, `@tailwindcss/vite` (V33)
 - Vite dev proxy: `/api` → a backend (a port legyen egy helyen konfigurálva)
 - `src/api.ts`: fetch-wrapper (Bearer token, JSON, ProblemDetails `detail` kinyerése, 401 → kijelentkeztetés)
 - Típusok az API DTO-ihoz (`NoteSummary`, `NoteDetail`, `Folder`, `ShareInfo`)
@@ -22,7 +23,11 @@ megosztott jegyzetek listája (egyelőre csak olvasható lista).
   előre kiírva, és a szerver `errors.password` üzenetei a mező alatt), védett `/notes` útvonal, kilépés
 - `/notes`: oldalsáv váz (Összes, Mappa nélküli, „Velem megosztott”) és a jegyzetlista (cím, frissítés ideje; megosztottnál szerep és tulajdonos);
   „Frissítés” gomb
-- Alap CSS (sima CSS, UI-könyvtár nélkül), magyar feliratok
+- Tailwind beállítása: a `@tailwindcss/vite` plugin a `vite.config.ts`-ben, `@import "tailwindcss";` a `src/index.css`-ben,
+  a design tokenek (színek, betűtípus) egy `@theme` blokkban. A Vite sablon mintastílusainak (`App.css`, mintalogók) törlése.
+- Vizuális irány: a `frontend-design` skill alapján a tervben röviden írd le a választott irányt (színek, tipográfia,
+  elrendezés), és ezt hagyjam jóvá, mielőtt építesz rá. Ez az irány a 07–08. feladatban is érvényes marad.
+- Magyar feliratok
 - ESLint beállítás (a Vite sablon szerint)
 
 ### NEM szerepel
@@ -30,7 +35,7 @@ megosztott jegyzetek listája (egyelőre csak olvasható lista).
 - Frontend automatizált tesztek
 
 ## Kötött döntések
-V13 (token `sessionStorage`), design 7. (React Router, TanStack Query, sima CSS). A szerepek szerinti UI-tiltás a 08-ban jön.
+V13 (token `sessionStorage`), V33 (Tailwind + `frontend-design`), design 7. (React Router, TanStack Query). A szerepek szerinti UI-tiltás a 08-ban jön.
 
 ## Kész, ha
 - [ ] `npm run build` és `npm run lint` hibamentes

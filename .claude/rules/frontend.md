@@ -10,7 +10,13 @@ paths:
   kinyerése, 401 → kijelentkeztetés). Komponensben közvetlen `fetch` nincs.
 - A JWT csak `sessionStorage`-ben tárolható (V13); `localStorage`-ba, cookie-ba vagy URL-be nem kerülhet.
 - Adatlekérés: TanStack Query; mentés/törlés után query invalidálás. Útvonalak: React Router.
-- Stílus: sima CSS, UI-könyvtár nélkül. A felület nyelve magyar.
+- Stílus: Tailwind CSS v4 (`@tailwindcss/vite`), utility osztályokkal a komponensekben. Nincs `tailwind.config.js`
+  és PostCSS-konfiguráció: a v4 a `src/index.css`-ben `@import "tailwindcss";` sorral indul, a saját színek és
+  betűtípusok a `@theme` blokkba kerülnek. Komponenskönyvtár (MUI, shadcn stb.) és inline `style` nincs.
+- Vizuális tervezés: a `frontend-design` skill irányelvei szerint, de ezek a szabályok az erősebbek (Tailwind,
+  komponenskönyvtár nélkül; új npm csomag csak engedéllyel, külső betűtípus vagy CDN csak engedéllyel).
+- Hozzáférhetőség: minden űrlapmezőnek legyen címkéje, a gombok billentyűzettel is elérhetők, látható fókusz.
+- A felület nyelve magyar.
 - A szerep szerinti tiltás/rejtés csak kényelmi réteg: a szerver 403/404 válaszát mindig kezelni kell.
 - A szerver hibaüzenetét (`detail`, `errors`) jelenítsd meg; sikertelen mentésnél a beírt szöveg megmarad.
 - A backend URL-jét ne égesd be: fejlesztéskor a Vite proxy továbbítja az `/api` hívásokat.

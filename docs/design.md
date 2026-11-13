@@ -189,7 +189,11 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
 
 - Útvonalak: `/login`, `/register`, `/notes` (védett).
 - Fő nézet: oldalsáv (Összes, Mappa nélküli, mappák, „Velem megosztott"), jegyzetlista, szerkesztő.
-- Technika: React Router, TanStack Query, saját `src/api.ts` fetch-wrapper (token, hibák), sima CSS (UI-könyvtár nélkül).
+- Technika: React Router, TanStack Query, saját `src/api.ts` fetch-wrapper (token, hibák), Tailwind CSS v4 a hivatalos
+  `@tailwindcss/vite` pluginnal (komponenskönyvtár nélkül, V33).
+- Vizuális tervezés: a `frontend-design` plugin (Claude Code hivatalos marketplace, projekt hatókörrel telepítve)
+  irányítja a felület megjelenését, Tailwind osztályokkal megvalósítva. A design tokenek (színek, betűtípus) a
+  `src/index.css` `@theme` blokkjában vannak, nem szétszórva a komponensekben.
 - Fejlesztéskor a Vite proxyja továbbítja az `/api` hívásokat a backendnek (nincs CORS-konfiguráció).
 - A gombokat a szerep alapján tiltjuk/rejtjük (olvasó csak olvas; szerkesztő nem lát törlést/megosztást),
   de a védelem a szerveren van.
@@ -235,7 +239,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V32.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V33.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -283,6 +287,9 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V30 Megosztásnál: validáció → tulajdonos-ellenőrzés → címzett → önmaga → ismétlés.
 - V31 A megosztás `Location` fejléce `/api/notes/{id}/shares/{userId}`, `GET` végpont nélkül.
 - V32 A megosztások listája a normalizált felhasználónév szerint, az adatbázisban rendezett.
+- V33 Stílus: Tailwind CSS (v4, `@tailwindcss/vite`) a sima CSS helyett, a `frontend-design` pluginnal a vizuális
+  tervezéshez; komponenskönyvtár (pl. MUI, shadcn) nincs. (A fejlesztő döntése a 06. feladat előtt; az eredeti terv
+  sima CSS volt.)
 
 ## 10. Nem célok
 
