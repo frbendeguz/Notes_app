@@ -14,7 +14,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 03 – Jegyzet CRUD és `NoteAccessService` (`tasks/03-notes-crud.md`)
 - [x] 04 – Mappák (`tasks/04-folders.md`)
 - [x] 05 – Megosztás (`tasks/05-sharing.md`)
-- [ ] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
+- [x] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
 - [ ] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
 - [ ] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [ ] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
@@ -83,3 +83,13 @@ a commitot a fejlesztő hagyja jóvá.
   formátuma érvénytelen.” üzenettel. A párhuzamos ismételt megosztás (egyedi index, 2067) → 409, teszt nélkül.
 - 05 → 11: az API-leírásba: megosztás-végpontok, hibakódok, a `Location` fejléc GET nélkül, a `/api/notes/shared` rendezése
   (`UpdatedAt`, majd `CreatedAt` csökkenő).
+- 06: fejlesztői döntések: az „Összes” csak a saját jegyzeteket mutatja; vizuális irány: régi aktadosszié (szekrényacél,
+  manila, bélyegzővörös, mappafülek), betűtípus `@fontsource/courier-prime`; linter: oxlint (a jelenlegi Vite sablon nem
+  ad ESLintet). Javaslat: a 06. feladatfájl „ESLint beállítás” pontjának, valamint a CLAUDE.md és a design pontosítása
+  (linter: oxlint), és az irány felvétele a design 7. szakaszába (a fejlesztő dönt).
+- 06: a kézi lépéseket (`docs/testing/manual/06.md`, 25 lépés) a fejlesztő hajtja végre a commit előtt; az agent
+  böngészős és proxyn keresztüli próbát nem végzett (a `dotnet run` + `curl` füstpróbát a jogosultság elutasította).
+- 06 → 11: a README-be: frontend indítása (`cd notes-web`, `npm install`, `npm run dev`, `http://localhost:5173`); a backend
+  címe a `notes-web/vite.config.ts`-ben, a `NOTES_API_URL` környezeti változóval felülírható.
+- 06 → 07: a hibaüzenet-megjelenítés (`ApiError.message`, `ApiError.errors`) és a `buttonStyles` újrahasználható; a lista
+  query-kulcsai `['notes', …]`, mentés után az invalidálás ezzel a prefixszel megy.

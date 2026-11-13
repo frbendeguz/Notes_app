@@ -286,3 +286,50 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 218/218 sikeres tesztet adott.
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: az ellenőrzési sorrend a megosztásnál (a nem tulajdonos
   nem tudhatja meg, létezik-e egy felhasználónév).
+
+## 06 – Frontend: váz, belépés, lista (2026-11-13)
+- **Fázis:** megvalósítás
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/06-frontend-auth-and-list.md`, design 3., 5., 7. szakasz, V9, V13, V33; spec 1–2. elfogadási
+  feltétel; CLAUDE.md, `.claude/rules/frontend.md`; `frontend-design` skill
+- **Terv és módosításai:** az agent a terv mellé két kérdést (betűtípus, az „Összes” jelentése) és egy vizuális irányt
+  („vonalas füzet”: hideg fehér papír, töltőtollkék, piros margóvonal, Literata serif) adott. A fejlesztő döntései:
+  (1) az „Összes” csak a saját jegyzeteket mutatja (`GET /api/notes`), a megosztottak a „Velem megosztott” nézetben;
+  (2) a vizuális irányt elvetette, helyette régi aktadossziét kért Consolas-szerű betűvel. Az agent erre új irányt adott
+  (szekrényacél háttér, manila lap, bélyegzővörös szerep-bélyegzők, mappafülek oldalsávként, egyetlen monospace család),
+  valódi hivatali jelvény nélkül; (3) a betűtípus a `@fontsource/courier-prime` npm csomag (a fejlesztő „első (javasolt)
+  opció a courier-prime” megfogalmazással választotta; az agent a név szerint megnevezett csomagot követte, a javasolt
+  1. opció a rendszerbetű volt). A tervet így jóváhagyta.
+- **Eltérés a tervtől megvalósítás közben:** (1) a Vite sablon jelenlegi változata (create-vite 9.3.4, Vite 8, TypeScript 7,
+  React 19) ESLint helyett oxlintet ad (`"lint": "oxlint"`, `.oxlintrc.json`). Az agent megállt és kérdezett; a fejlesztő
+  döntése: az oxlint marad (új csomag nélkül). A feladatfájl „ESLint beállítás” pontja így nem szó szerint teljesül.
+  (2) A sablon `tsconfig.app.json`-ja nem tartalmazott `"strict": true` sort; a frontend-szabály miatt az agent felvette.
+  (3) A `useAuth` hook, a context és a provider három fájlba került (`authContext.ts`, `useAuth.ts`, `AuthProvider.tsx`)
+  a `react/only-export-components` lint-szabály miatt. (4) A tervben szereplő `Sidebar.tsx` neve `notes/FolderTabs.tsx`
+  lett, a nézetek definíciója a `notes/views.ts`-be, a gombstílusok a `components/buttonStyles.ts`-be kerültek.
+  (5) A tervhez képest többlet: „unreachable” állapot (ha a `/me` ellenőrzés nem kap választ, a token megmarad,
+  „Újrapróbálás” gomb), a 401 miatti kijelentkezés után a belépőoldal üzenete („A munkamenet lejárt vagy érvénytelen.”),
+  `refetchOnWindowFocus: false` (design 7: szinkron csak betöltéskor, mentés után és gombbal).
+- **Blokkolt műveletek (hook/jogosultság):** (1) két Bash-parancsot, amelyek szövegében szerepelt a védett design-fájl
+  neve (egy olvasó grep és ennek a naplóbejegyzésnek a heredoc-os hozzáfűzése), a védett fájlok hookja blokkolt; helyette
+  Grep/Read, illetve Edit eszköz. (2) A kézi füstpróba (backend `dotnet run` a háttérben + Vite dev szerver + `curl` a
+  proxyn át) a jogosultsági beállítás miatt nem futott le; a háttérben elindított backendet az agent leállította. Böngészős
+  és proxyn keresztüli kipróbálás az agent részéről nem történt.
+- **Elbukó tesztek valódi hiba miatt:** – (frontend automatizált teszt nincs, NEM szerepel a feladatban).
+- **Reviewer megállapításai:** ítélet: „lezárható”, blokkoló hiba és hatókörön kívüli változás nincs (a reviewer saját
+  futása: build sikeres, lint 0 jelzés, `dotnet test` 218/218). Nem blokkolók és sorsuk: (1) a Vite sablon angol
+  `notes-web/README.md`-je megmaradt → törölve; (2) leállt backend mellett a Vite proxy (a reviewer szerint, nem futtatva)
+  üres törzsű 500-at ad, így a „szerver nem érhető el” üzenet nem jelenne meg → javítva: az `api.ts` a törzs nélküli 5xx-et
+  hálózati hibaként kezeli (`toApiError`), és a kézi lépések kiegészültek a 24–25. lépéssel (leállított backend); a proxy
+  viselkedését az agent sem futtatta le; (3) a 22. lépés (375 px) elvárt eredménye nem említette a fülsor saját vízszintes
+  görgetését → pontosítva; (4) a napló fejlesztői sorai üresek → szándékosan, a fejlesztő tölti ki; (5) a
+  `docs/testing/runs/` nem kell → egyetértés, nem készült. A javítás közben egy Sonar-jelzés (S3776, kognitív komplexitás
+  16/15 az `apiFetch`-ben) miatt a hibaválasz-feldolgozás a `toApiError` függvénybe került.
+- **Ellenőrzés:** `npm run build`: sikeres (tsc + vite build); `npm run lint` (oxlint): 0 figyelmeztetés, 0 hiba – az
+  agent egy ideiglenes, szándékosan hibás fájllal ellenőrizte, hogy az oxlint valóban vizsgálja a `src`-t (3 jelzés,
+  exit 1), majd törölte; `dotnet test`: 218/218. A reviewer utáni javítások után a build és a lint újra hibamentes (a
+  frontend-változás a backend-teszteket nem érinti, a `dotnet test` nem futott újra). A kézi lépések a
+  `docs/testing/manual/06.md`-ben (25 lépés), végrehajtásuk a fejlesztőre vár.
+- **Fejlesztői döntés:**
+- **Ellenőrzés (fejlesztő):**
+- **Döntési eset jelölt?** (a fejlesztő dönt)

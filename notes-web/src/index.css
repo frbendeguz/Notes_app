@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/*
+  Design tokens (design 7, V33): "old case file" direction approved in task 06.
+  Components use only these names (bg-manila, text-stamp, font-mono ...), never raw hex values.
+*/
+@theme {
+  --color-steel: #4a5048; /* filing cabinet: page background around the folder */
+  --color-manila: #e6d3a3; /* folder sheet: lists, forms */
+  --color-manila-dark: #cdb57e; /* inactive folder tabs, row separators */
+  --color-ink: #262420; /* typewriter ribbon: body text */
+  --color-stamp: #9e2a2b; /* rubber stamp: role stamps, errors, active tab, focus */
+  --color-faded: #5a5243; /* faded ink: timestamps, owner, helper text */
+
+  --font-mono: "Courier Prime", Consolas, "Cascadia Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  html {
+    @apply bg-steel font-mono text-ink;
+  }
+
+  /* One visible focus style everywhere (keyboard users). */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-stamp;
+  }
+}
