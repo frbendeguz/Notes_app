@@ -129,3 +129,40 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   - *Rövid tesztnevek ütközési kockázata:* a 03. feladat elején javíttatom, és bekerült a tesztelési szabályok közé.
 - **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 55/55 sikeres tesztet adott. A `.claude/logs/instructions.log` alapján a `.claude/rules/backend.md` a `Notes.Api` fájljainak beolvasásakor betöltődött (`path_glob_match`), tehát az útvonalhoz kötött szabályok működnek. Kézzel, futó backenden (PowerShell, `Invoke-RestMethod`) kipróbáltam a regisztrációt (201, token), a `/api/auth/me` hívást a kapott tokennel (200, a felhasználó adatai) és a rossz jelszavas belépést (401, ProblemDetails magyar hibaüzenettel).
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: belépés hiányzó mezőire 401 a 400 helyett.
+
+## 03 – Jegyzet CRUD és NoteAccessService (2026-11-13)
+- **Fázis:** megvalósítás
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/03-notes-crud.md`, a design 2., 4., 5., 6. szakasza és V1, V2, V3, V8; a spec 2., 3., 4., 6.
+  elfogadási feltétele; CLAUDE.md, `.claude/rules/backend.md`, `.claude/rules/testing.md`.
+- **Terv és módosításai:** az agent terve: tesztnév-javítás elsőként; `NoteRole`, `NoteOperation`, `NoteAccessService`
+  (`GetRoleAsync`, `EnsureCanAsync`, a mátrix adatként), `NoteService`, `NotesController`, `NoteDtos`,
+  `JsonStringEnumConverter` a `Program.cs`-ben; a saját jegyzetek listájának `OwnerId`-szűrése a `NoteService`-ben.
+  Három nyitott kérdés: (1) `folderId` a válasz-DTO-ban már most; (2) státuszkódok: POST 201 + `Location`, PUT 200,
+  DELETE 204; (3) PUT-nál a validáció a jogosultság-ellenőrzés előtt fut (olvasó/idegen érvénytelen törzzsel 400-at kap).
+  A fejlesztő módosításai: a listaszűrés is a `NoteAccessService`-be kerüljön (minden jogosultságkezelés ott) → 
+  `OwnedNotes(userId)`; (1) a `folderId` a 04. feladatig kimarad; (2) a státuszkódok elfogadva; (3) a validáció marad elöl.
+- **Eltérés a tervtől megvalósítás közben:** –. Apróság: a rövid tesztnevekhez tervezett fix név a 3 karakteres
+  esetben `"b-x"` (a 2 karakteres, elutasított esetben `"b-"`); 13 karaktertől a név továbbra is GUID-alapú.
+  A tervezettnél néhány teszttel több készült: `GetRole_ShareRevoked_ReturnsNoneOnNextCall`,
+  `OwnedNotes_OwnerWithSharedAndForeignNotes_ReturnsOnlyOwned`, `GetNote_ShareRemovedFromDatabase_Returns404OnNextRequest`,
+  `NotesEndpoints_NoToken_Return401`, valamint a törlési teszt a megosztások kaszkádos törlését is ellenőrzi.
+- **Blokkolt műveletek (hook/jogosultság):** –
+- **Elbukó tesztek valódi hiba miatt:** – (az új tesztek elsőre átmentek; mentett futás nincs).
+- **Reviewer megállapításai:** ítélet: „nem zárható le”, egyetlen blokkoló: a naplóban a teszteloszlás hibás volt
+  („21 + 44” a valós 22 + 43 helyett) → javítva. Nem blokkolók és sorsuk: (1) a lista szerepe beégetett `NoteRole.Owner`
+  a `NoteService`-ben → nem javítva: az `OwnedNotes` (a `NoteAccessService`-ben) definíció szerint a tulajdonos jegyzeteit
+  adja; a 05. „Velem megosztott” listájánál a szerepet a `NoteAccessService`-ből kell venni (a `progress.md`-be felvéve);
+  (2) az `UpdatedAt > created.UpdatedAt` elméletben azonos óraütésnél elbukhat → nem javítva, a kockázat elméleti;
+  (3) a sorrendteszt nem ellenőrizte a PUT státuszát → kiegészítve; (4) a „validáció a jogosultság előtt” döntést
+  nem rögzítette teszt → új `UpdateNote_ViewerWithInvalidBody_Returns400AndNoteUnchanged`; (5) üres fejlesztői
+  sorok → a fejlesztő tölti ki; (6) nincs `docs/testing/runs/` → rendben, nem volt valódi hibából elbukó teszt.
+- **Ellenőrzés:** `dotnet build --no-incremental`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 121/121 (55 korábbi +
+  22 `NoteAccessServiceTests` + 44 `NotesTests`, a reviewer utáni kiegészítéssel; a reviewer előtt 120/120, ebből
+  43 `NotesTests`); `grep` a `NotesController`-ben és a `NoteService`-ben: nincs
+  `NoteShare`-, szerep- vagy `OwnerId`-alapú hozzáférési döntés (az `OwnerId = userId` a létrehozáskor a tulajdonost
+  állítja be). Kézi kipróbálás futó backenden nem történt.
+- **Fejlesztői döntés:**
+- **Ellenőrzés (fejlesztő):**
+- **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: a validáció a jogosultság-ellenőrzés előtt fut
+  (az olvasó érvénytelen PUT-ja 400-at kap 403 helyett).

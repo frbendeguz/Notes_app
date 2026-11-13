@@ -6,7 +6,7 @@ using Notes.Api.Dtos;
 namespace Notes.Tests;
 
 /// <summary>A registered test user and an HttpClient that sends its Bearer token.</summary>
-public sealed record AuthenticatedUser(HttpClient Client, string UserName, string Password, string Token);
+public sealed record AuthenticatedUser(HttpClient Client, Guid Id, string UserName, string Password, string Token);
 
 public static class AuthHelper
 {
@@ -28,6 +28,8 @@ public static class AuthHelper
         }
         var auth = (await response.Content.ReadFromJsonAsync<AuthResponse>())!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.Token);
-        return new AuthenticatedUser(client, auth.UserName, DefaultPassword, auth.Token);
+        // The id is needed by tests that write rows (e.g. shares) directly into the database.
+        var me = (await client.GetFromJsonAsync<MeResponse>("/api/auth/me"))!;
+        return new AuthenticatedUser(client, me.Id, auth.UserName, DefaultPassword, auth.Token);
     }
 }

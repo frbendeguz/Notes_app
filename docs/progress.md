@@ -11,7 +11,7 @@ a commitot a fejlesztő hagyja jóvá.
 ## 2. mérföldkő – Első működő verzió (10. hét)
 - [x] 01 – Alapok és adatréteg (`tasks/01-foundation.md`)
 - [x] 02 – Regisztráció, belépés, JWT, hibakezelés (`tasks/02-auth.md`)
-- [ ] 03 – Jegyzet CRUD és `NoteAccessService` (`tasks/03-notes-crud.md`)
+- [x] 03 – Jegyzet CRUD és `NoteAccessService` (`tasks/03-notes-crud.md`)
 - [ ] 04 – Mappák (`tasks/04-folders.md`)
 - [ ] 05 – Megosztás (`tasks/05-sharing.md`)
 - [ ] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
@@ -53,3 +53,14 @@ a commitot a fejlesztő hagyja jóvá.
 - 02: a `Register_UserNameBoundaryLength_Returns201` 3 karakteres neve csak 256 változat; ha később más teszt is
   regisztrál 3 karakteres nevet a közös fixture-ben, ütközhet.
 - 02: kézi kipróbálás (`dotnet run` + kérés a végpontokra) az agent részéről nem történt (jogosultság elutasította).
+- 02 → 03: a rövid tesztnevek ütközési kockázata javítva (`AuthTests.NameOfLength`: 13 karakter alatt fix, kötőjeles
+  név, amelyet csak a hossz-határteszt használ).
+- 03: a `NoteSummary`/`NoteDetail` még nem tartalmaz `folderId`-t (fejlesztői döntés) – a 04. feladatban kell felvenni
+  (csak a tulajdonosnak töltve, design 5.).
+- 03: PUT-nál a validáció a jogosultság-ellenőrzés előtt fut (fejlesztői döntés): az olvasó vagy idegen érvénytelen
+  törzsű kérése 400-at kap (nem 403/404-et). Javaslat: a design 4./6. szakaszába felvenni (a fejlesztő dönt).
+- 03: a státuszkódok (POST 201 + `Location`, PUT 200, DELETE 204) a design 5.-ben nincsenek rögzítve; felvételük javasolt.
+- 03: a nem GUID formájú `{id}` a route-megkötés miatt 404-et ad, de általános ProblemDetails törzzsel (nem a
+  „A jegyzet nem található." üzenettel).
+- 03 → 05: a „Velem megosztott” listánál a hívó szerepét a `NoteAccessService` adja (a 03-as listában a `NoteRole.Owner`
+  az `OwnedNotes` jelentéséből következik; reviewer-észrevétel).

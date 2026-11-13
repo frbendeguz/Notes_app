@@ -79,7 +79,7 @@ public sealed class AuthTests(TestApiFactory factory) : IClassFixture<TestApiFac
     [InlineData(Limits.UserNameMax)]
     public async Task Register_UserNameBoundaryLength_Returns201(int length)
     {
-        var response = await Register(UniqueOfLength(length), "Jelszo123");
+        var response = await Register(NameOfLength(length), "Jelszo123");
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
@@ -89,7 +89,7 @@ public sealed class AuthTests(TestApiFactory factory) : IClassFixture<TestApiFac
     [InlineData(Limits.UserNameMax + 1)]
     public async Task Register_UserNameWrongLength_Returns400WithErrorsAndUserNotCreated(int length)
     {
-        var userName = UniqueOfLength(length);
+        var userName = NameOfLength(length);
 
         var response = await Register(userName, "Jelszo123");
 
@@ -454,9 +454,18 @@ public sealed class AuthTests(TestApiFactory factory) : IClassFixture<TestApiFac
         return token[..at] + (token[at] == 'A' ? 'B' : 'A') + token[(at + 1)..];
     }
 
-    /// <summary>Unique user name of exactly the given length (hex digits of two Guids).</summary>
-    private static string UniqueOfLength(int length) =>
-        ("u" + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"))[..length];
+    /// <summary>
+    /// User name of exactly the given length for the length-boundary tests. From 13 characters on it is unique
+    /// ("u" + Guid hex, like <see cref="AuthHelper.UniqueUserName"/>). A shorter random name would have too few
+    /// variants and could collide in the shared fixture database, so short lengths get a fixed name with a '-'
+    /// that the Guid-based generator never produces; only the length-boundary tests use it.
+    /// </summary>
+    private static string NameOfLength(int length) =>
+        length >= ShortNameThreshold
+            ? ("u" + Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"))[..length]
+            : ("b-" + new string('x', length))[..length];
+
+    private const int ShortNameThreshold = 13;
 
     /// <summary>Password of exactly the given length that satisfies the character-class rules.</summary>
     private static string PasswordOfLength(int length) => ("Aa1" + new string('x', Math.Max(0, length - 3)))[..length];
