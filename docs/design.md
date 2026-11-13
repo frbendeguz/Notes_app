@@ -217,8 +217,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V26.
-Megerősítésre vár: V27.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V27.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -257,7 +256,7 @@ Megerősítésre vár: V27.
 - V25 `PUT /api/notes/{id}/folder`: előbb a jegyzet jogosultsága, utána a mappa ellenőrzése.
 - V26 A `POST /api/folders` `Location` fejléce `/api/folders/{id}`, `GET` végpont nélkül.
 - V27 A mappanév egyedisége csak a kis- és nagybetűt hagyja figyelmen kívül, az ékezetet nem (a spec csak
-  kis- és nagybetű-függetlenséget ír elő). Megerősítésre vár.
+  kis- és nagybetű-függetlenséget ír elő).
 
 ## 10. Nem célok
 

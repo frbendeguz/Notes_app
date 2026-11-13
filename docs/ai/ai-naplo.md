@@ -224,5 +224,6 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   - *`folderId` a nem tulajdonosnak:* a mező mindig jelen van, de `null`; így a kliens egyféle válaszformát kezel, és a tulajdonos mappaszerkezetéről semmi nem szivárog ki (V24).
   - *Ellenőrzési sorrend az áthelyezésnél:* előbb a jegyzet jogosultsága, utána a mappa; így a szerkesztő idegen mappára is 403-at kap, és nem tudja meg, létezik-e a mappa (V25).
   - *`Location` fejléc:* `/api/folders/{id}`, bár `GET` végpont nincs rá; az azonosító így is egyértelműen jelöli a létrehozott mappát, az eltérés az API-leírásban dokumentált (V26).
+  - *Ékezet a mappanév egyediségében:* az „Árvíztűrő” és az „Arvizturo” két külön név maradt (V27). A spec csak kis- és nagybetű-függetlenséget ír elő, a magyarban az ékezet jelentést hordoz (pl. „Kor” és „Kör”), és az ékezetek összevonása a normalizálás megváltoztatásával adatmigrációt is igényelne.
 - **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 162/162 sikeres tesztet adott.
 - **Döntési eset jelölt?** igen – a mappalista rendezése: a saját első döntésemet a reviewer észrevétele alapján módosítottam, és az új viselkedést egy teszt bizonyítja, amely a régi változaton elbukna.
