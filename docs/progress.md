@@ -13,7 +13,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 02 – Regisztráció, belépés, JWT, hibakezelés (`tasks/02-auth.md`)
 - [x] 03 – Jegyzet CRUD és `NoteAccessService` (`tasks/03-notes-crud.md`)
 - [x] 04 – Mappák (`tasks/04-folders.md`)
-- [ ] 05 – Megosztás (`tasks/05-sharing.md`)
+- [x] 05 – Megosztás (`tasks/05-sharing.md`)
 - [ ] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
 - [ ] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
 - [ ] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
@@ -73,3 +73,15 @@ a commitot a fejlesztő hagyja jóvá.
   `PUT /api/notes/{id}/folder`); a két szűrő együtt (`folderId` + `unfiled=true`) 400, `errors.unfiled`.
 - 04: az „Árvíztűrő” és az „Arvizturo” két különböző mappanév (a `Text.Normalize` csak kis/nagybetűt egyesít, ékezetet nem);
   a teszt ezt rögzíti – a fejlesztő megerősítheti.
+- 05: fejlesztői döntések: a szerep `"Viewer"`/`"Editor"`, kis/nagybetűtől függetlenül (a DTO-ban string); hiányzó/üres
+  `userName` → 400, formailag érvénytelen név → 404; POST sorrend: validáció → tulajdonos → címzett (404) → önmaga (400) →
+  ismétlés (409); POST 201 + `ShareInfo` + `Location: /api/notes/{id}/shares/{userId}` (nincs rá GET); megosztások listája
+  felhasználónév szerint; a megosztott nézetben `folderId: null`. Javaslat: a design 5. szakaszába felvenni (a fejlesztő dönt).
+- 05: NYITOTT (fejlesztői döntés kell): a `ShareService` a sikeres `EnsureCanAsync(Share)` után maga kezeli a `NoteShare`-sorokat
+  (lista, ismétlés-ellenőrzés, törlés); a `.claude/rules/backend.md` szó szerint ezt tiltja („nincs `NoteShare`-alapú
+  szűrés”). Vagy a szabály pontosítandó (láthatósági szűrés ≠ megosztássorok kezelése), vagy a lekérdezések a
+  `NoteAccessService`-be költöznek.
+- 05: a számként küldött szerep (`"role": 1`) a modellkötésnél bukik el: 400, de `errors["$.role"]` az általános „A kérés
+  formátuma érvénytelen.” üzenettel. A párhuzamos ismételt megosztás (egyedi index, 2067) → 409, teszt nélkül.
+- 05 → 11: az API-leírásba: megosztás-végpontok, hibakódok, a `Location` fejléc GET nélkül, a `/api/notes/shared` rendezése
+  (`UpdatedAt`, majd `CreatedAt` csökkenő).

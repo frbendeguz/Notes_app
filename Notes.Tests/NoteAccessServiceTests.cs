@@ -78,6 +78,11 @@ public sealed class NoteAccessServiceTests : IDisposable
     [InlineData(Caller.Viewer, NoteOperation.MoveToFolder, typeof(ForbiddenException))]
     [InlineData(Caller.Stranger, NoteOperation.MoveToFolder, typeof(NotFoundException))]
     [InlineData(Caller.MissingNote, NoteOperation.MoveToFolder, typeof(NotFoundException))]
+    [InlineData(Caller.Owner, NoteOperation.Share, null)]
+    [InlineData(Caller.Editor, NoteOperation.Share, typeof(ForbiddenException))]
+    [InlineData(Caller.Viewer, NoteOperation.Share, typeof(ForbiddenException))]
+    [InlineData(Caller.Stranger, NoteOperation.Share, typeof(NotFoundException))]
+    [InlineData(Caller.MissingNote, NoteOperation.Share, typeof(NotFoundException))]
     public async Task EnsureCan_CallerAndOperation_FollowsMatrix(Caller caller, NoteOperation operation, Type? expectedException)
     {
         var (userId, noteId) = await ArrangeAsync(caller);
@@ -109,6 +114,28 @@ public sealed class NoteAccessServiceTests : IDisposable
         var ids = await new NoteAccessService(db).OwnedNotes(owner).Select(n => n.Id).ToListAsync();
 
         Assert.Equal([own], ids);
+    }
+
+    [Fact]
+    public async Task SharedNotes_UserWithSharesOwnAndForeignNotes_ReturnsOnlySharedWithRoleFromShare()
+    {
+        var me = await AddUserAsync();
+        var other = await AddUserAsync();
+        await AddNoteAsync(me);
+        await AddNoteAsync(other);
+        var asEditor = await AddNoteAsync(other);
+        var asViewer = await AddNoteAsync(other);
+        await AddShareAsync(asEditor, me, ShareRole.Editor);
+        await AddShareAsync(asViewer, me, ShareRole.Viewer);
+
+        await using var db = NewContext();
+        var shared = await new NoteAccessService(db).SharedNotes(me)
+            .Select(s => new { s.Note.Id, s.Role })
+            .ToListAsync();
+
+        Assert.Equal(2, shared.Count);
+        Assert.Contains(new { Id = asEditor, Role = NoteRole.Editor }, shared);
+        Assert.Contains(new { Id = asViewer, Role = NoteRole.Viewer }, shared);
     }
 
     /// <summary>Returns the calling user's id and the note id for the given caller kind.</summary>

@@ -2,7 +2,7 @@ namespace Notes.Api.Services;
 
 /// <summary>
 /// Operations on a single note that need an access check (rows of the design 4 matrix).
-/// Sharing is added by its own task (05).
+/// <see cref="Share"/> covers sharing, revoking and listing the shares of a note (one row of the matrix).
 /// </summary>
 public enum NoteOperation
 {
@@ -10,4 +10,5 @@ public enum NoteOperation
     Edit,
     Delete,
     MoveToFolder,
+    Share,
 }

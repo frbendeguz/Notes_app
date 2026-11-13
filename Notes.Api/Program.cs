@@ -56,6 +56,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<NoteAccessService>();
 builder.Services.AddScoped<NoteService>();
 builder.Services.AddScoped<FolderService>();
+builder.Services.AddScoped<ShareService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 

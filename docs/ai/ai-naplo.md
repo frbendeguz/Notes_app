@@ -227,3 +227,49 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   - *Ékezet a mappanév egyediségében:* az „Árvíztűrő” és az „Arvizturo” két külön név maradt (V27). A spec csak kis- és nagybetű-függetlenséget ír elő, a magyarban az ékezet jelentést hordoz (pl. „Kor” és „Kör”), és az ékezetek összevonása a normalizálás megváltoztatásával adatmigrációt is igényelne.
 - **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 162/162 sikeres tesztet adott.
 - **Döntési eset jelölt?** igen – a mappalista rendezése: a saját első döntésemet a reviewer észrevétele alapján módosítottam, és az új viselkedést egy teszt bizonyítja, amely a régi változaton elbukna.
+
+## 05 – Megosztás (2026-11-13)
+- **Fázis:** megvalósítás
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/05-sharing.md`, a design 2., 4., 5., 6. szakasza, V1, V4, V10, V18, V19, V24; a spec 5–7.
+  elfogadási feltétele; CLAUDE.md, `.claude/rules/backend.md`, `.claude/rules/testing.md`.
+- **Terv és módosításai:** az agent terve: `NoteOperation.Share` a mátrixban; `NoteAccessService.SharedNotes` (a „Velem
+  megosztott” lekérdezés a szereppel); `NoteService.ListSharedAsync` + `GET /api/notes/shared`; új `ShareService`,
+  `SharesController`, `ShareDtos`; nincs új csomag és migráció. Hét nyitott kérdés, a fejlesztő döntései:
+  (1) szerep: string mező, `"Viewer"`/`"Editor"` – az agent kis/nagybetűre érzékeny egyezést javasolt, a fejlesztő
+  döntése: kis/nagybetűtől független (a `"viewer"` is elfogadott); (2) hiányzó/üres `userName` → 400, formailag érvénytelen
+  név → 404 – a javaslat szerint; (3) sorrend a POST-nál: validáció → tulajdonos-ellenőrzés → címzett (404) → önmaga (400)
+  → ismétlés (409) – a javaslat szerint; (4) POST: 201 + `ShareInfo` + `Location: /api/notes/{id}/shares/{userId}` (GET
+  nincs rá) – a javaslat szerint; (5) a megosztások listája felhasználónév szerint, `hu-HU` nélkül – a javaslat szerint;
+  (6) a megosztott nézetben a `folderId` mező jelen van, `null` értékkel (V24) – a javaslat szerint; (7) a `NoteShare`-sorok
+  kezelése (egy jegyzet megosztásainak listázása, ismétlés-ellenőrzés, törlés) a `ShareService`-ben a sikeres
+  `EnsureCanAsync(Share)` után, a láthatósági lekérdezés a `NoteAccessService`-ben – erre a kérdésre nem érkezett külön
+  válasz; a fejlesztő a tervet jóváhagyta, az agent a terv javaslatát követte.
+- **Eltérés a tervtől megvalósítás közben:** – A tervhez képest néhány teszttel több készült: a nem tulajdonos ismeretlen
+  felhasználónévvel is 403/404-et kap (nem a címzett 404-ét), olvasó érvénytelen szereppel 400 (V18), számként küldött szerep
+  400, a második címzett a visszavonás után is hozzáfér, visszavonás + újramegosztás más szereppel (V4), token nélkül 401 a
+  megosztás-végpontokon, a szerkesztő mentése nem veszi ki a jegyzetet a tulajdonos mappájából, valamint egy
+  `SharedNotes` egységteszt a `NoteAccessServiceTests`-ben. A párhuzamos ismételt megosztást a `ShareService` az egyedi
+  index megsértésekor (SQLite 2067) is 409-re fordítja; erre nincs teszt. A számként küldött szerep (`"role": 1`) a
+  modellkötésnél bukik el, ezért az általános „A kérés formátuma érvénytelen.” 400-at adja, nem az `errors.role` üzenetet.
+- **Blokkolt műveletek (hook/jogosultság):** – (egy Bash heredoc-os fájlírás szintaktikai hiba miatt nem futott le, a
+  fájlok utána a Write/Edit eszközzel készültek; ez nem blokkolás volt).
+- **Elbukó tesztek valódi hiba miatt:** – (minden teszt elsőre átment; egy xUnit2013 analizátor-figyelmeztetés javítva).
+- **Reviewer megállapításai:** ítélet: „lezárható”, blokkoló hiba és hatókörön kívüli változás nincs. Nem blokkolók és
+  sorsuk: (1) a `progress.md` pipája hiányzott → a lezáráskor bejelölve; (2) a napló reviewer-sora helykitöltő volt → kitöltve,
+  a fejlesztői sorok üresen maradtak; (3) a `.claude/rules/backend.md` szerint a többi service-ben nincs `NoteShare`-alapú
+  szűrés, a `ShareService` viszont három helyen (megosztások listája, ismétlés-ellenőrzés, visszavonás) `NoteShares`-lekérdezést
+  végez, mindig a sikeres `EnsureCanAsync(Share)` után → nem módosítva, a fejlesztő kifejezett döntését kéri (7. nyitott
+  kérdés), a `progress.md`-be felvéve; (4) tesztminőség: a `ShareNote_ViewerWithInvalidRole_Returns400` és a
+  `ShareNote_NotOwnerWithUnknownUser_GetsAccessErrorNotRecipientError` nem ellenőrizte a mellékhatás hiányát, a
+  `ShareNote_NumericRole_Returns400AndNoShareCreated` csak a státuszt nézte → javítva (megosztásszám-ellenőrzés; ProblemDetails
+  `errors["$.role"]` „A kérés formátuma érvénytelen.” üzenettel); (5) a 2067 → 409 ágra nincs teszt → nem javítva, a
+  versenyhelyzet tesztből nehezen idézhető elő; (6) a „Velem megosztott” lista másodlagos rendezése (`CreatedAt` csökkenő)
+  a designban nincs rögzítve → nem módosítva, a saját lista (03) ugyanígy rendez; a design pontosítása javasolt.
+- **Ellenőrzés:** `dotnet build`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 217/217 (162 korábbi + 5 új `Share` sor és
+  1 `SharedNotes` teszt a `NoteAccessServiceTests`-ben + 49 `SharingTests`); a reviewer utáni tesztjavítások után is 217/217. Az 1–8. elfogadási feltétel mindegyikéhez van
+  `// ACn` jelölésű automatizált teszt. Kézi kipróbálás futó backenden nem történt.
+- **Fejlesztői döntés:**
+- **Ellenőrzés (fejlesztő):**
+- **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: az ellenőrzési sorrend a megosztásnál (a nem tulajdonos
+  nem tudhatja meg, létezik-e egy felhasználónév).

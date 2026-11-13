@@ -58,6 +58,17 @@ public sealed class NoteService(AppDbContext db, NoteAccessService access)
             .ToListAsync(ct);
     }
 
+    /// <summary>
+    /// "Velem megosztott": notes shared with the caller, most recently updated first. Visibility and the role come from
+    /// <see cref="NoteAccessService.SharedNotes"/> (V19); the folderId is always null, folders are private (V24).
+    /// </summary>
+    public async Task<IReadOnlyList<NoteSummary>> ListSharedAsync(Guid userId, CancellationToken ct) =>
+        await access.SharedNotes(userId)
+            .OrderByDescending(s => s.Note.UpdatedAt)
+            .ThenByDescending(s => s.Note.CreatedAt)
+            .Select(s => new NoteSummary(s.Note.Id, s.Note.Title, s.Note.UpdatedAt, s.Role, s.Note.Owner.UserName, null))
+            .ToListAsync(ct);
+
     public async Task<NoteDetail> GetAsync(Guid userId, Guid noteId, CancellationToken ct)
     {
         var role = await access.EnsureCanAsync(userId, noteId, NoteOperation.Read, ct);

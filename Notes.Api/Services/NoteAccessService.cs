@@ -57,11 +57,25 @@ public sealed class NoteAccessService(AppDbContext db)
         NoteOperation.Edit => role is NoteRole.Owner or NoteRole.Editor,
         NoteOperation.Delete => role is NoteRole.Owner,
         NoteOperation.MoveToFolder => role is NoteRole.Owner,
+        NoteOperation.Share => role is NoteRole.Owner,
         _ => false,
     };
 
     /// <summary>The notes the user owns ("saját jegyzetek"); the caller's role on each of them is <see cref="NoteRole.Owner"/>.</summary>
     public IQueryable<Note> OwnedNotes(Guid userId) => db.Notes.Where(n => n.OwnerId == userId);
+
+    /// <summary>
+    /// The notes shared with the user ("Velem megosztott") with the caller's role on each, read from the share row
+    /// (V19). Notes the user owns never appear here: the owner is <c>Note.OwnerId</c>, never a share row (D3).
+    /// </summary>
+    public IQueryable<SharedNote> SharedNotes(Guid userId) =>
+        db.NoteShares
+            .Where(s => s.UserId == userId && s.Note.OwnerId != userId)
+            .Select(s => new SharedNote
+            {
+                Note = s.Note,
+                Role = s.Role == ShareRole.Editor ? NoteRole.Editor : NoteRole.Viewer,
+            });
 
     /// <summary>The user's own folders. Folders are private: only the owner sees or uses them (design 4, V19).</summary>
     public IQueryable<Folder> OwnedFolders(Guid userId) => db.Folders.Where(f => f.OwnerId == userId);
@@ -77,4 +91,11 @@ public sealed class NoteAccessService(AppDbContext db)
             throw new NotFoundException(FolderNotFoundMessage);
         }
     }
+}
+
+/// <summary>A note shared with the caller and the caller's role on it (<see cref="NoteAccessService.SharedNotes"/>).</summary>
+public sealed class SharedNote
+{
+    public required Note Note { get; init; }
+    public required NoteRole Role { get; init; }
 }

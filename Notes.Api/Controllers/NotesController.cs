@@ -4,7 +4,7 @@ using Notes.Api.Services;
 
 namespace Notes.Api.Controllers;
 
-/// <summary>Note CRUD and moving a note into a folder (design 5). Thin: access and validation are decided in the services.</summary>
+/// <summary>Note CRUD, the "shared with me" list and moving a note into a folder (design 5). Thin: access and validation are decided in the services.</summary>
 [ApiController]
 [Route("api/notes")]
 public sealed class NotesController(NoteService noteService) : ControllerBase
@@ -13,6 +13,10 @@ public sealed class NotesController(NoteService noteService) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<NoteSummary>>> List(
         [FromQuery] Guid? folderId, [FromQuery] bool? unfiled, CancellationToken ct) =>
         Ok(await noteService.ListOwnAsync(User.GetUserId(), folderId, unfiled, ct));
+
+    [HttpGet("shared")]
+    public async Task<ActionResult<IReadOnlyList<NoteSummary>>> ListShared(CancellationToken ct) =>
+        Ok(await noteService.ListSharedAsync(User.GetUserId(), ct));
 
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<NoteDetail>> Get(Guid id, CancellationToken ct) =>
