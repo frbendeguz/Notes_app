@@ -83,6 +83,9 @@ A láthatósági szűrés is a `NoteAccessService` feladata: a „saját jegyzet
 a „Velem megosztott” lista lekérdezése is itt készül, a `role` értékét is innen kapja a válasz (V19).
 A mappák tulajdon-ellenőrzése is itt van (`OwnedFolders`, `EnsureOwnFolderAsync`); idegen és nem létező mappa
 minden végponton ugyanazt a 404-et adja (V20).
+A `NoteShare`-sorok lekérdezése is itt van (`SharedNotes`, `SharesOf`, `ShareOf`). A `SharesOf` és a `ShareOf` nem
+ellenőriz jogosultságot, ezért csak a sikeres `EnsureCanAsync(Share)` után hívható; más service csak írhat
+megosztás-sort (felvétel, törlés), szűrni nem (V19).
 Nem GUID formájú azonosítóra az `{id:guid}` útvonal-megkötés miatt általános 404 jön; ez nem árul el
 semmit, mert ilyen azonosítójú jegyzet nem is létezhet.
 
@@ -124,6 +127,21 @@ Mappák és jegyzetek részletei (04. feladat):
   mappára is 403-at kap, és a mappa létezéséről nem tud meg semmit (V25). Az `UpdatedAt` nem változik (V23).
 - `PUT /api/notes/{id}` a törzsben küldött `folderId`-t figyelmen kívül hagyja; mappát csak a `/folder` végpont vált.
 - Ha a mappát egy másik kérés közben törlik, a mappába helyezés és a mappás létrehozás is 404-et ad (nem 500-at).
+
+Megosztás részletei (05. feladat):
+- `role`: `"Viewer"` vagy `"Editor"`, kis- és nagybetűtől függetlenül (`"viewer"` is jó). Minden más szöveg
+  (`"Owner"`, hiányzó mező) 400 `errors.role`; számként küldött érték (`"role": 1`) 400 az általános
+  „A kérés formátuma érvénytelen.” üzenettel, mert a kérés már a beolvasásnál elbukik (V28).
+- `userName`: hiányzó vagy üres → 400 `errors.userName`; formailag érvénytelen név → 404, mert ilyen felhasználó
+  nem létezhet (V29).
+- `POST` ellenőrzési sorrend: validáció → tulajdonos-ellenőrzés → címzett keresése → önmaga → ismétlés. A szerkesztő
+  és az olvasó mindig 403-at, az idegen 404-et kap, így egyikük sem tudja meg, létezik-e egy felhasználónév; az
+  önmagaddal való megosztás csak a tulajdonosnak ad 400-at (V30).
+- `POST` → 201 + `ShareInfo` + `Location: /api/notes/{id}/shares/{userId}`, `GET` végpont nélkül (V31, mint V26).
+- `GET /api/notes/{id}/shares`: felhasználónév szerint, a normalizált oszlopon, az adatbázisban rendezve; `hu-HU`
+  rendezés nem kell, mert a felhasználónév csak ASCII karaktert tartalmazhat (V32).
+- `GET /api/notes/shared`: `UpdatedAt` szerint csökkenő, egyezésnél a létrehozás ideje dönt (mint a saját listánál);
+  a `folderId` itt is jelen van, mindig `null` (V24).
 
 Válasz-DTO-k:
 - `NoteSummary`: `id, title, updatedAt, role, ownerUserName, folderId` (a 04. feladattól a mező mindig jelen van;
@@ -217,7 +235,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V27.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V32.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -243,8 +261,10 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V18 Módosító kérésnél a validáció a jogosultság-ellenőrzés előtt fut. Következmény: érvénytelen törzsre az olvasó,
   az idegen és a nem létező jegyzet is 400-at kap (nem 403/404-et). Ez nem árul el semmit a jegyzet létezéséről,
   mert minden esetben azonos, és a spec 6. feltételével sem ütközik, mert ott a kérés érvényes.
-- V19 Minden jogosultsági és láthatósági döntés a `NoteAccessService`-ben van, a listák szűrése és a mappák
-  tulajdon-ellenőrzése is (a fejlesztő döntése: a többi service nem szűrhet `OwnerId` alapján).
+- V19 Minden jogosultsági és láthatósági döntés a `NoteAccessService`-ben van, a listák szűrése, a mappák
+  tulajdon-ellenőrzése és a megosztás-sorok lekérdezése is (a fejlesztő döntése: a többi service nem szűrhet
+  `OwnerId` vagy `NoteShare` alapján; a 05. feladatban a szigorúbb változatot választotta, így a `ShareService`
+  csak ír, a lekérdezéseket a `NoteAccessService` végzi).
 - V20 Idegen és nem létező mappa mindenhol 404 (szűrő, létrehozás mappával, áthelyezés, törlés), üres lista helyett is.
 - V21 `unfiled=false` = nincs szűrő; csak a `folderId` + `unfiled=true` együttes megadása 400.
 - V22 A mappalista magyar ábécé szerint, kis- és nagybetűtől függetlenül rendezett, memóriában, `hu-HU` kultúrával.
@@ -257,6 +277,12 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V26 A `POST /api/folders` `Location` fejléce `/api/folders/{id}`, `GET` végpont nélkül.
 - V27 A mappanév egyedisége csak a kis- és nagybetűt hagyja figyelmen kívül, az ékezetet nem (a spec csak
   kis- és nagybetű-függetlenséget ír elő).
+- V28 A megosztási szerep kis- és nagybetűtől független (`"viewer"` is elfogadott; az MI eredetileg pontos egyezést
+  javasolt, a fejlesztő módosította). Számként küldött szerep: 400, általános formátumhiba-üzenettel.
+- V29 Formailag érvénytelen címzett-felhasználónév: 404 (nem található), nem 400.
+- V30 Megosztásnál: validáció → tulajdonos-ellenőrzés → címzett → önmaga → ismétlés.
+- V31 A megosztás `Location` fejléce `/api/notes/{id}/shares/{userId}`, `GET` végpont nélkül.
+- V32 A megosztások listája a normalizált felhasználónév szerint, az adatbázisban rendezett.
 
 ## 10. Nem célok
 

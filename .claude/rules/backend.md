@@ -11,7 +11,9 @@ paths:
   kérésnél adatbázisból. A tokenben csak a felhasználó azonosítója és neve van, szerep soha.
   Idegen és nem létező jegyzet válasza azonos (404). A listák láthatósági szűrése (saját, velem megosztott),
   a mappák tulajdon-ellenőrzése és a válaszban szereplő `role` is a `NoteAccessService`-ből jön (V19); a többi service-ben nincs
-  `OwnerId`- vagy `NoteShare`-alapú szűrés.
+  `OwnerId`- vagy `NoteShare`-alapú szűrés. A megosztás-sorok lekérdezése (`SharesOf`, `ShareOf`) is a
+  `NoteAccessService`-ben van; ezek nem ellenőriznek jogosultságot, ezért csak a sikeres `EnsureCanAsync` után
+  hívhatók. Más service megosztás-sort csak írhat (felvétel, törlés).
 - Módosító kérés sorrendje: validáció → jogosultság → módosítás (V18).
 - Entitást soha ne adj vissza az API-ból, mindig DTO. Enum JSON-ban stringként (`JsonStringEnumConverter`).
 - Hibakezelés: a service-ek kivételt dobnak (`ValidationFailedException`, `NotFoundException`,

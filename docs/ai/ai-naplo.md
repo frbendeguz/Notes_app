@@ -276,6 +276,13 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   a build 0 figyelmeztetéssel. Az 1–8. elfogadási feltétel mindegyikéhez van
   `// ACn` jelölésű automatizált teszt. Kézi kipróbálás futó backenden nem történt.
 - **Fejlesztői döntés:**
-- **Ellenőrzés (fejlesztő):**
+  - *Szerep formátuma:* az MI pontos, kis- és nagybetűre érzékeny egyezést javasolt; módosítottam, a `"viewer"` is elfogadott (V28). A szerep jelentése nem függ az írásmódtól, és így a kliens hibalehetősége is kisebb.
+  - *Formailag érvénytelen címzett-név:* 404, mert ilyen felhasználó nem létezhet; külön formai ellenőrzés csak egy újabb hibaágat jelentene azonos eredménnyel (V29).
+  - *Ellenőrzési sorrend a megosztásnál:* elfogadtam a javaslatot (validáció → tulajdonos → címzett → önmaga → ismétlés). Így a szerkesztő és az olvasó mindig 403-at kap, és a válaszokból nem derül ki, létezik-e egy felhasználónév (V30).
+  - *`Location` fejléc `GET` végpont nélkül:* elfogadtam, a mappáknál hozott V26-tal egységesen (V31).
+  - *Megosztások rendezése:* az adatbázisban, a normalizált felhasználónév szerint; `hu-HU` rendezés nem kell, mert a felhasználónév csak ASCII karaktert tartalmazhat (V32).
+  - *`folderId` a megosztott nézetben:* a mező jelen van, mindig `null` értékkel, hogy a kliens egyféle választ kezeljen (V24).
+  - *Megosztás-sorok lekérdezése:* a javasolt enyhébb változat helyett a szigorúbbat választottam: minden `NoteShare`-lekérdezés a `NoteAccessService`-be került (`SharesOf`, `ShareOf`), a `ShareService` csak ír (V19). Indok: a jogosultsági logika egy helyen maradjon, és a szabály ne igényeljen kivételt.
+- **Ellenőrzés (fejlesztő):** a `dotnet test` saját futtatása 218/218 sikeres tesztet adott.
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: az ellenőrzési sorrend a megosztásnál (a nem tulajdonos
   nem tudhatja meg, létezik-e egy felhasználónév).
