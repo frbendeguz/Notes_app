@@ -15,7 +15,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 04 – Mappák (`tasks/04-folders.md`)
 - [x] 05 – Megosztás (`tasks/05-sharing.md`)
 - [x] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
-- [ ] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
+- [x] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
 - [ ] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [ ] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
 - [ ] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
@@ -93,3 +93,16 @@ a commitot a fejlesztő hagyja jóvá.
   címe a `notes-web/vite.config.ts`-ben, a `NOTES_API_URL` környezeti változóval felülírható.
 - 06 → 07: a hibaüzenet-megjelenítés (`ApiError.message`, `ApiError.errors`) és a `buttonStyles` újrahasználható; a lista
   query-kulcsai `['notes', …]`, mentés után az invalidálás ezzel a prefixszel megy.
+- 07: fejlesztői döntések: a nyitott jegyzet az URL-ben (`?note=<id>` / `?note=new`, mappa nézet `?view=folder&folder=<id>`);
+  új jegyzet POST-ja az első Mentéskor; a mappaváltás a Mentéshez kötött; nincs `maxLength`, határ felett a kliens nem ment;
+  a „Velem megosztott” sorai nem kattinthatók (08); nem mentett módosításnál megerősítés lapon belüli navigációkor;
+  `lg`-n lista + szerkesztő egymás mellett; a nyitott mappa törlése után „Mappa nélküli”. Javaslat: a design 7. szakaszába
+  felvenni (URL-paraméterek, mappaváltás a Mentéssel) – a fejlesztő dönt.
+- 07: új token `--color-paper` (szerkesztőlap), új `dangerButton` stílus.
+- 07: nem kérdez rá a nem mentett módosításra: a böngésző Vissza gombja, F5/lapbezárás (`beforeunload`), a Kilépés gomb.
+  A Kilépés kérdése a fejlesztő döntése lehet.
+- 07: a kézi lépéseket (`docs/testing/manual/07.md`, 35 lépés) a fejlesztő hajtja végre a commit előtt; az agent böngészős
+  próbát nem végzett.
+- 07 → 08: a megosztott jegyzet megnyitása (`?view=shared&note=` jelenleg figyelmen kívül marad) és a szerep szerinti tiltás a
+  `NoteEditor`-ban; az editor szerkesztő szerepnél a Törlést és a Mappa mezőt rejtse.
+- 06 napló: a fejlesztői „Ellenőrzés (fejlesztő)” sorban csonka mondat maradt („…megjelent. is a „szerver nem érhető el”…”).

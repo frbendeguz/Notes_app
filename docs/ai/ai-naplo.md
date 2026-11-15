@@ -335,6 +335,55 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   - *Vizuális irány (V35):* az MI „vonalas füzet” irányt javasolt; ehelyett saját irányt adtam: régi FBI-aktákat idéző „aktadosszié” stílus, írógépes betűvel. A felkínált betűk közül a `@fontsource/courier-prime` csomagot választottam: valódi írógépes hatású, tartalmazza az „ő” és „ű” betűt, és helyben szolgálja ki a betűt, így nincs külső CDN-kérés, és minden gépen ugyanúgy néz ki (a Consolas-alapú rendszerbetű gépenként eltérne).
   - *„Összes” nézet (V36):* csak a saját jegyzeteket mutatja, a megosztottak a „Velem megosztott” nézetben vannak. Így egy lekérés elég, és a saját és a mások jegyzetei nem keverednek (a mappák is csak a sajátjaim).
   - *Linter (V34):* a jelenlegi Vite sablon oxlintet ad ESLint helyett; ezt megtartottam, mert a sablon része, és a `npm run lint` ugyanúgy ellenőrzi a kódot (az agent egy szándékosan hibás fájllal igazolta, hogy a `src`-t vizsgálja).
-- **Ellenőrzés (fejlesztő):** a `docs/testing/manual/06.md` lépéseit futó backenden és `npm run dev` mellett végrehajtottam; az eredményeket a fájlba írtam. A 18. lépésben a megadott PowerShell-parancs hibát adott, ennek oka nem termékhiba volt, hanem a Windows PowerShell 5.1 kódolása (lásd lent). Javított parancsokkal a megosztás működött, és a címzettnél a felületen is megjelent. is a „szerver nem érhető el” üzenetet mutatta.
+- **Ellenőrzés (fejlesztő):** a `docs/testing/manual/06.md` lépéseit futó backenden és `npm run dev` mellett végrehajtottam; az eredményeket a fájlba írtam. A 18. lépésben a megadott PowerShell-parancs hibát adott, ennek oka nem termékhiba volt, hanem a Windows PowerShell 5.1 kódolása (lásd lent). Javított parancsokkal a megosztás működött, és a címzettnél a felületen is megjelent.
 - **Döntési eset jelölt?** (a fejlesztő dönt)
 - **Korlát (kézi ellenőrzés):** az MI által írt kézi tesztlépés hibás volt Windows PowerShell 5.1 alatt, mert a szöveges kéréstörzset Latin-1 kódolással küldi, így az ékezetes JSON 400-at kapott. Ez csak a kézi végrehajtáskor derült ki, mert az agent nem futtathatta a parancsokat. A szerver viselkedése helyes volt (érvénytelen kódolású kérés → 400). Tanulság: az MI által írt, le nem futtatott lépéseket ténylegesen végre kell hajtani; a szabályt a 07–09. feladat kézi lépéseibe felvettem.
+
+## 07 – Frontend: szerkesztő és mappák (2026-11-15)
+- **Fázis:** megvalósítás
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/07-frontend-editor-folders.md`, design 5., 6., 7., 9. szakasz (V7, V22–V25, V33–V36);
+  spec 2., 3., 4., 8. elfogadási feltétel; CLAUDE.md, `.claude/rules/frontend.md`; `frontend-design` skill; a backend
+  üzenetszövegei (`NoteService.cs`, `FolderService.cs`, `ValidationFailedException.cs`) és a 06-os kézi lépések formája
+- **Terv és módosításai:** az agent a terv mellé nyolc kérdést tett fel javaslattal. A fejlesztő döntései: (1) a
+  megnyitott jegyzet is az URL-ben van (`?note=<id>`, új jegyzetnél `?note=new`; mappa nézet `?view=folder&folder=<id>`);
+  (2) az „Új jegyzet” üres szerkesztőt nyit, a `POST` az első Mentéskor megy el, mappa nézetben az aktuális mappával;
+  (3) a javaslattól eltérően a mappa megváltoztatása NEM azonnal megy el, hanem a Mentés gombhoz kötött (a Mentés
+  szükség szerint `PUT /api/notes/{id}`, majd `PUT /api/notes/{id}/folder` kérést küld); (4) nincs `maxLength`, határ
+  felett a kliens a szerverével azonos üzenettel nem ment, a címszámláló a levágott hosszt mutatja; a 101/10 001-es kézi
+  lépés így a kliens tiltását ellenőrzi, a szerveri elutasítást a backend tesztek fedik; (5) a „Velem megosztott” lista a
+  07-ben nem kattintható (08); (6) nem mentett módosításnál megerősítő ablak a lapon belüli navigációkor, `beforeunload`
+  nélkül; (7) széles képernyőn lista és szerkesztő egymás mellett (`max-w-7xl`), keskenyen a szerkesztő a lista helyén;
+  (8) a nyitott mappa törlése után a „Mappa nélküli” nézet nyílik meg. A tervet így jóváhagyta.
+- **Eltérés a tervtől megvalósítás közben:** (1) új fájl a tervhez képest: `notes/GuardedLink.tsx` (valódi link, de a
+  bal kattintás a nem mentett módosítás ellenőrzésén megy át) – a 6. döntés megvalósításához kellett. (2) Új szín-token:
+  `--color-paper` (a szerkesztő „gépelt lapja”); a vonalazott szövegmező a meglévő `manila-dark` tokenből rajzolja a
+  vonalakat. (3) Új gombstílus: `dangerButton` (Törlés). (4) Az `api.ownNotes` paramétere a korábbi `unfiled` logikai
+  érték helyett szűrő-objektum lett (`all` / `unfiled` / `folder`). (5) A `views.ts` statikus nézetlistája helyett
+  `NoteView` unió (mappa nézettel) és URL-építő függvények. (6) A szerkesztő a mappák betöltése alatt, illetve közben
+  törölt mappánál külön opciót mutat („Betöltés…” / „(törölt mappa)”), hogy a legördülő ne mutasson hamisan
+  „(nincs mappa)”-t. (7) A böngésző Vissza gombja nem kérdez rá a nem mentett módosításra (a `BrowserRouter` mellett
+  ehhez nincs blokkoló API); csak a lap saját linkjei és gombjai.
+- **Blokkolt műveletek (hook/jogosultság):** egy olvasó Bash-parancsot (backend-fájlok listázása), amelynek szövegében a
+  védett design-fájl neve is szerepelt, a hook blokkolt; helyette a Read eszköz.
+- **Elbukó tesztek valódi hiba miatt:** – (frontend automatizált teszt nincs, NEM szerepel a feladatban).
+- **Reviewer megállapításai:** ítélet: „nem zárható le” két kisebb hiba miatt (a reviewer saját futása: build sikeres,
+  lint 0 jelzés, `dotnet test` 218/218; hatókörön kívüli változás, új csomag, migráció nincs). Blokkolók és sorsuk:
+  (1) a `progress.md`-ben a 07 nincs kipipálva → a lezárás utolsó lépéseként kipipálva; (2) a `manual/07.md`
+  előkészítése elavult lépésszámokra hivatkozott (27 → 33, 28 → 34) → javítva. Nem blokkolók: (3) nem mentett
+  módosítás mellett a már nyitott jegyzet sorára kattintva az „Elvetés” ugyanarra az URL-re navigált, a szerkesztő nem
+  töltődött újra, az oldal `dirty` jelzője viszont törlődött, így a további navigáció már nem kérdezett rá → javítva: a
+  `go` nem csinál semmit, ha a cél az aktuális cím; (4) a Kilépés és a mappatörlés (×) nem kérdez rá a nem mentett
+  módosításra → nem változott: a 6. döntés a lapon belüli navigációról szól, a mappatörlés nem zárja be a szerkesztőt,
+  a Kilépés kérdése a fejlesztő döntése lehet; (5) mentés közben a mezők szerkeszthetők, a közben gépelt szöveg „nem
+  mentett” marad, adatvesztés nincs → nem változott; (6) a 06-os bejegyzés fejlesztői „Ellenőrzés” sorában csonka mondat
+  maradt → nem javítva, mert a fejlesztő szövege; (7) frontend automatizált teszt és `runs/` kimenet nem kell → egyetértés.
+  A javítások után a build és a lint újra hibamentes.
+- **Ellenőrzés:** `npm run build`: sikeres; `npm run lint` (oxlint): 0 figyelmeztetés, 0 hiba (az első futás 2
+  `preserve-manual-memoization` figyelmeztetést adott a `useCallback` miatt, javítva); `dotnet test`: 218/218. A kézi
+  lépések a `docs/testing/manual/07.md`-ben (35 lépés), végrehajtásuk a fejlesztőre vár; böngészős próbát az agent nem
+  végzett.
+- **Fejlesztői döntés:**
+- **Ellenőrzés (fejlesztő):**
+- **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: a mappaváltás a Mentéshez kötése (az agent azonnali
+  küldést javasolt).

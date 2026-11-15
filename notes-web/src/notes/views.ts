@@ -1,46 +1,88 @@
 import { api } from '../api'
 import type { NoteSummary } from '../types'
 
-/** The note lists of the sidebar. "all" = every own note (developer decision, task 06); shared notes have their own view. */
-export type NoteView = 'all' | 'unfiled' | 'shared'
+/**
+ * The note lists of the sidebar (design 7). "all" = every own note (V36); shared notes have their own view;
+ * "folder" = the notes of one own folder (task 07).
+ */
+export type NoteView =
+  | { kind: 'all' }
+  | { kind: 'unfiled' }
+  | { kind: 'shared' }
+  | { kind: 'folder'; folderId: string }
 
-export interface NoteViewDefinition {
-  view: NoteView
+export type FixedViewKind = 'all' | 'unfiled' | 'shared'
+
+interface FixedViewText {
   tabLabel: string
   heading: string
   emptyText: string
-  queryKey: readonly unknown[]
-  load: () => Promise<NoteSummary[]>
 }
 
-export const noteViews: readonly NoteViewDefinition[] = [
-  {
-    view: 'all',
-    tabLabel: 'Összes',
-    heading: 'Összes jegyzet',
-    emptyText: 'Még nincs jegyzeted.',
-    queryKey: ['notes', 'own', 'all'],
-    load: () => api.ownNotes(false),
-  },
-  {
-    view: 'unfiled',
+export const fixedViewTexts: Record<FixedViewKind, FixedViewText> = {
+  all: { tabLabel: 'Összes', heading: 'Összes jegyzet', emptyText: 'Még nincs jegyzeted.' },
+  unfiled: {
     tabLabel: 'Mappa nélküli',
     heading: 'Mappa nélküli jegyzetek',
     emptyText: 'Nincs mappa nélküli jegyzeted.',
-    queryKey: ['notes', 'own', 'unfiled'],
-    load: () => api.ownNotes(true),
   },
-  {
-    view: 'shared',
+  shared: {
     tabLabel: 'Velem megosztott',
     heading: 'Velem megosztott jegyzetek',
     emptyText: 'Még senki nem osztott meg veled jegyzetet.',
-    queryKey: ['notes', 'shared'],
-    load: () => api.sharedNotes(),
   },
-]
+}
 
-/** Reads the `?view=` URL parameter; anything unknown falls back to "all". */
-export function viewFromParam(param: string | null): NoteViewDefinition {
-  return noteViews.find((definition) => definition.view === param) ?? noteViews[0]
+export const FOLDER_EMPTY_TEXT = 'Ebben a mappában nincs jegyzet.'
+
+/** Value of `?note=` while a not yet saved new note is open. */
+export const NEW_NOTE = 'new'
+
+/**
+ * Reads the view from the URL: `?view=unfiled|shared`, `?view=folder&folder=<id>`; anything else is "all".
+ * (The selected note is `?note=<id>` or `?note=new`, read separately.)
+ */
+export function viewFromParams(params: URLSearchParams): NoteView {
+  const view = params.get('view')
+  if (view === 'unfiled' || view === 'shared') return { kind: view }
+  const folderId = params.get('folder')
+  if (view === 'folder' && folderId) return { kind: 'folder', folderId }
+  return { kind: 'all' }
+}
+
+/** The `/notes?...` address of a view, optionally with an open note. */
+export function viewPath(view: NoteView, noteId: string | null = null): string {
+  const params = new URLSearchParams()
+  if (view.kind !== 'all') params.set('view', view.kind)
+  if (view.kind === 'folder') params.set('folder', view.folderId)
+  if (noteId) params.set('note', noteId)
+  const query = params.toString()
+  return query ? `/notes?${query}` : '/notes'
+}
+
+export function sameView(a: NoteView, b: NoteView): boolean {
+  if (a.kind === 'folder' && b.kind === 'folder') return a.folderId === b.folderId
+  return a.kind === b.kind
+}
+
+// Query keys: every note list starts with 'notes', so invalidating ['notes'] refreshes them all (task 06).
+export const foldersQueryKey = ['folders'] as const
+
+export function notesQueryKey(view: NoteView): readonly unknown[] {
+  switch (view.kind) {
+    case 'shared':
+      return ['notes', 'shared']
+    case 'folder':
+      return ['notes', 'own', 'folder', view.folderId]
+    default:
+      return ['notes', 'own', view.kind]
+  }
+}
+
+export function noteDetailQueryKey(id: string): readonly unknown[] {
+  return ['notes', 'detail', id]
+}
+
+export function loadNotes(view: NoteView): Promise<NoteSummary[]> {
+  return view.kind === 'shared' ? api.sharedNotes() : api.ownNotes(view)
 }

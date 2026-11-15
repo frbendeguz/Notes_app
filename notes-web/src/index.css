@@ -7,6 +7,7 @@
 @theme {
   --color-steel: #4a5048; /* filing cabinet: page background around the folder */
   --color-manila: #e6d3a3; /* folder sheet: lists, forms */
+  --color-paper: #f2ead6; /* typed report sheet clipped into the folder: the note editor (task 07) */
   --color-manila-dark: #cdb57e; /* inactive folder tabs, row separators */
   --color-ink: #262420; /* typewriter ribbon: body text */
   --color-stamp: #9e2a2b; /* rubber stamp: role stamps, errors, active tab, focus */

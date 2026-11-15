@@ -1,6 +1,6 @@
 // The only place that calls fetch (frontend rules). Adds the Bearer token, sends/reads JSON,
 // turns ProblemDetails into ApiError, and logs the user out on 401 (design 7).
-import type { AuthResponse, FieldErrors, MeResponse, NoteSummary } from './types'
+import type { AuthResponse, FieldErrors, Folder, MeResponse, NoteDetail, NoteSummary } from './types'
 
 const TOKEN_KEY = 'notes.token'
 
@@ -31,6 +31,16 @@ export class ApiError extends Error {
     this.status = status
     this.errors = errors
   }
+}
+
+/** The user-facing text of any caught error: the server's `detail`, or a generic message. */
+export function errorMessage(error: unknown): string {
+  return error instanceof ApiError ? error.message : GENERIC_ERROR
+}
+
+/** The server's messages for one field (`errors.<field>`), or none. */
+export function fieldErrors(error: unknown, field: string): string[] {
+  return error instanceof ApiError ? (error.errors[field] ?? []) : []
 }
 
 let unauthorizedHandler: (() => void) | null = null
@@ -110,7 +120,38 @@ export const api = {
     apiFetch<AuthResponse>('/api/auth/register', { method: 'POST', body: { userName, password } }),
   me: () => apiFetch<MeResponse>('/api/auth/me'),
 
-  /** Own notes; `unfiled` = only notes without a folder. */
-  ownNotes: (unfiled = false) => apiFetch<NoteSummary[]>(unfiled ? '/api/notes?unfiled=true' : '/api/notes'),
+  /** Own notes, optionally filtered: only notes without a folder, or only the notes of one own folder. */
+  ownNotes: (filter: OwnNotesFilter) => apiFetch<NoteSummary[]>(ownNotesPath(filter)),
   sharedNotes: () => apiFetch<NoteSummary[]>('/api/notes/shared'),
+
+  note: (id: string) => apiFetch<NoteDetail>(`/api/notes/${encodeURIComponent(id)}`),
+  /** `folderId` = the folder the new note goes into (own folder, otherwise 404). */
+  createNote: (title: string, content: string, folderId: string | null) =>
+    apiFetch<NoteDetail>('/api/notes', { method: 'POST', body: { title, content, folderId } }),
+  /** Title and text only: the server ignores a folderId here (moving is `moveNote`). */
+  updateNote: (id: string, title: string, content: string) =>
+    apiFetch<NoteDetail>(`/api/notes/${encodeURIComponent(id)}`, { method: 'PUT', body: { title, content } }),
+  deleteNote: (id: string) => apiFetch<null>(`/api/notes/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  /** `folderId: null` takes the note out of its folder. Does not change `updatedAt` (V23). */
+  moveNote: (id: string, folderId: string | null) =>
+    apiFetch<NoteDetail>(`/api/notes/${encodeURIComponent(id)}/folder`, { method: 'PUT', body: { folderId } }),
+
+  /** Own folders with note counts, already in Hungarian alphabetical order (V22): do not re-sort. */
+  folders: () => apiFetch<Folder[]>('/api/folders'),
+  createFolder: (name: string) => apiFetch<Folder>('/api/folders', { method: 'POST', body: { name } }),
+  /** The notes of the folder stay and become folderless (D4). */
+  deleteFolder: (id: string) => apiFetch<null>(`/api/folders/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+}
+
+export type OwnNotesFilter = { kind: 'all' } | { kind: 'unfiled' } | { kind: 'folder'; folderId: string }
+
+function ownNotesPath(filter: OwnNotesFilter): string {
+  switch (filter.kind) {
+    case 'all':
+      return '/api/notes'
+    case 'unfiled':
+      return '/api/notes?unfiled=true'
+    case 'folder':
+      return `/api/notes?folderId=${encodeURIComponent(filter.folderId)}`
+  }
 }
