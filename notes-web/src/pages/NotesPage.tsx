@@ -22,6 +22,9 @@ import {
   viewPath,
 } from '../notes/views'
 
+/** What the unsaved changes dialog does when the user chooses to discard. */
+type PendingLeave = { kind: 'navigate'; to: string } | { kind: 'logout' }
+
 export function NotesPage() {
   const { status, logout } = useAuth()
   const [searchParams] = useSearchParams()
@@ -43,14 +46,19 @@ export function NotesPage() {
     enabled: openNote !== null && !isNew,
   })
 
-  // Unsaved changes guard: leaving a dirty editor through the page's own links asks first.
+  // Unsaved changes guard: leaving a dirty editor through the page's own links or "Kilépés" asks first
+  // (V42, V45). Deleting a folder does not close the editor, so it does not ask.
   const [dirty, setDirty] = useState(false)
-  const [pendingPath, setPendingPath] = useState<string | null>(null)
+  const [pendingLeave, setPendingLeave] = useState<PendingLeave | null>(null)
   function go(to: string) {
     // The open note's own row (or the address already shown): nothing to leave, so nothing to ask.
     if (to === viewPath(view, openNote)) return
-    if (dirty) setPendingPath(to)
+    if (dirty) setPendingLeave({ kind: 'navigate', to })
     else void navigate(to)
+  }
+  function requestLogout() {
+    if (dirty) setPendingLeave({ kind: 'logout' })
+    else logout()
   }
 
   // "Frissítés" (design 7): every note list, the open note and the folders are reloaded from the server.
@@ -122,7 +130,7 @@ export function NotesPage() {
           </span>
           <button
             type="button"
-            onClick={logout}
+            onClick={requestLogout}
             className="rounded-sm border-2 border-manila px-3 py-1 font-bold hover:bg-manila hover:text-ink focus-visible:outline-manila"
           >
             Kilépés
@@ -210,17 +218,18 @@ export function NotesPage() {
       </div>
 
       <ConfirmDialog
-        open={pendingPath !== null}
+        open={pendingLeave !== null}
         title="Nem mentett módosítások"
         confirmLabel="Elvetés és továbblépés"
         cancelLabel="Maradok"
         onConfirm={() => {
-          const to = pendingPath
-          setPendingPath(null)
+          const leave = pendingLeave
+          setPendingLeave(null)
           setDirty(false)
-          if (to) navigate(to)
+          if (leave?.kind === 'navigate') void navigate(leave.to)
+          else if (leave?.kind === 'logout') logout()
         }}
-        onCancel={() => setPendingPath(null)}
+        onCancel={() => setPendingLeave(null)}
       >
         <p>A megnyitott jegyzetben nem mentett módosítások vannak. Ha továbblépsz, elvesznek.</p>
       </ConfirmDialog>

@@ -95,13 +95,14 @@ a commitot a fejlesztő hagyja jóvá.
   query-kulcsai `['notes', …]`, mentés után az invalidálás ezzel a prefixszel megy.
 - 07: fejlesztői döntések: a nyitott jegyzet az URL-ben (`?note=<id>` / `?note=new`, mappa nézet `?view=folder&folder=<id>`);
   új jegyzet POST-ja az első Mentéskor; a mappaváltás a Mentéshez kötött; nincs `maxLength`, határ felett a kliens nem ment;
-  a „Velem megosztott” sorai nem kattinthatók (08); nem mentett módosításnál megerősítés lapon belüli navigációkor;
+  a „Velem megosztott” sorai nem kattinthatók (08); nem mentett módosításnál megerősítés lapon belüli navigációkor és
+  a Kilépés gombnál (V45, a mappatörlésnél nincs);
   `lg`-n lista + szerkesztő egymás mellett; a nyitott mappa törlése után „Mappa nélküli”. Javaslat: a design 7. szakaszába
   felvenni (URL-paraméterek, mappaváltás a Mentéssel) – a fejlesztő dönt.
 - 07: új token `--color-paper` (szerkesztőlap), új `dangerButton` stílus.
-- 07: nem kérdez rá a nem mentett módosításra: a böngésző Vissza gombja, F5/lapbezárás (`beforeunload`), a Kilépés gomb.
-  A Kilépés kérdése a fejlesztő döntése lehet.
-- 07: a kézi lépéseket (`docs/testing/manual/07.md`, 35 lépés) a fejlesztő hajtja végre a commit előtt; az agent böngészős
+- 07: nem kérdez rá a nem mentett módosításra: a böngésző Vissza gombja, F5/lapbezárás (`beforeunload`), a mappatörlés
+  (nem zárja be a szerkesztőt).
+- 07: a kézi lépéseket (`docs/testing/manual/07.md`, 36 lépés) a fejlesztő hajtja végre a commit előtt; az agent böngészős
   próbát nem végzett.
 - 07 → 08: a megosztott jegyzet megnyitása (`?view=shared&note=` jelenleg figyelmen kívül marad) és a szerep szerinti tiltás a
   `NoteEditor`-ban; az editor szerkesztő szerepnél a Törlést és a Mappa mezőt rejtse.

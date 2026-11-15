@@ -381,9 +381,27 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   A javítások után a build és a lint újra hibamentes.
 - **Ellenőrzés:** `npm run build`: sikeres; `npm run lint` (oxlint): 0 figyelmeztetés, 0 hiba (az első futás 2
   `preserve-manual-memoization` figyelmeztetést adott a `useCallback` miatt, javítva); `dotnet test`: 218/218. A kézi
-  lépések a `docs/testing/manual/07.md`-ben (35 lépés), végrehajtásuk a fejlesztőre vár; böngészős próbát az agent nem
+  lépések a `docs/testing/manual/07.md`-ben (36 lépés), végrehajtásuk a fejlesztőre vár; böngészős próbát az agent nem
   végzett.
+- **Kiegészítés a lezárás után (V45):** a fejlesztő döntése alapján a fejléc „Kilépés” gombja nem mentett módosításnál
+  ugyanazt a „Nem mentett módosítások” megerősítő ablakot nyitja meg (ugyanazzal a szöveggel), mint a lapon belüli
+  navigáció; „Elvetés és továbblépés” után történik a kilépés. A mappatörlés (×) továbbra sem kérdez rá. Módosított
+  fájl: `notes-web/src/pages/NotesPage.tsx` (a függő navigáció helyett függő „elhagyás”: navigáció vagy kilépés). Új
+  kézi lépés: `manual/07.md` 36. lépés. Ellenőrzés: `npm run build` sikeres; `npm run lint` (oxlint)
+  0-s kilépési kóddal, jelzés nélkül fut le. Böngészős próbát az agent nem végzett. Reviewer (a fejlesztő kérésére):
+  „nem zárható le” egy blokkoló miatt – a `progress.md` 07-es pontjai még a Kilépést a rá nem kérdező esetek között és 35
+  lépést írtak → javítva. A logikát (dirty törlése, navigációs megerősítés, kilépés utáni átirányítás a bejelentkező
+  oldalra) és a 36. lépés elvárt eredményét a kóddal egyezőnek találta, hatókörön kívüli változás nincs. Nem blokkolók:
+  (1) a 36. lépésből nem derült ki, hogy az „Első jegyzet” címe ekkor 100 `c` → pontosítva; (2) korábbi hiba a 31.
+  lépésben: a 18–19. lépés után a szöveg 10 000 karakteres, így hozzáíráskor a kliensoldali ellenőrzés megállítja a
+  mentést, és a „szerver nem érhető el” üzenet nem jelenik meg → a fejlesztő döntése szerint a 31. lépés új, rövid
+  jegyzetet („Hálózati próba”) hoz létre, és azon próbálja a leállított backendet.
 - **Fejlesztői döntés:**
+  - *Jegyzet az URL-ben (V37):* a javaslat a jegyzetet opcionálisan tette volna az URL-be; az URL-es változatot választottam, mert így F5 után a megnyitott jegyzet is megmarad, és a cím megosztható vagy könyvjelzőzhető.
+  - *Mappaváltás a Mentéssel (V39):* az MI azonnali küldést javasolt a legördülő változásakor; ehelyett a Mentés gombhoz kötöttem, hogy a felhasználó számára egyetlen művelet legyen, és ne változzon semmi a szerveren, amíg nem ment. Vállalt következmény: a mentés két kérés, így ha a mappa közben törlődik, a szöveg mentve marad, a mappa nem változik, és hibaüzenet jelenik meg.
+  - *Kilépés megerősítése (V45):* a reviewer vetette fel, hogy a Kilépés nem kérdez rá a mentetlen módosításra; elrendeltem a megerősítést, mert ott a beírt szöveg elveszne. A mappatörlésnél nem kell, mert nem zárja be a szerkesztőt.
+  - *A többi javaslatot elfogadtam:* új jegyzet POST-ja csak az első Mentéskor (V38); kliensoldali validáció `maxLength` nélkül, a szerverével azonos üzenettel, a szerver elutasítását a backend tesztek fedik (V40); a megosztott lista a 08-ig csak olvasható (V41); rákérdezés mentetlen módosításnál, `beforeunload` nélkül (V42); kétoszlopos elrendezés (V43); a törölt mappa után a „Mappa nélküli” nézet (V44).
 - **Ellenőrzés (fejlesztő):**
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: a mappaváltás a Mentéshez kötése (az agent azonnali
   küldést javasolt).
+- **Korlát (hook):** a Bash-védő hook egy olvasó parancsot is blokkolt, mert a szövegében szerepelt a `design.md` neve, és írásra utaló jelet is tartalmazott. Az agent a Read eszközzel kerülte meg, kár nem keletkezett. A hookot szándékosan nem módosítottam: a heurisztika inkább legyen szigorú, mint engedékeny.
