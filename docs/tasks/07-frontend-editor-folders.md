@@ -12,6 +12,8 @@ A tulajdonos létrehozhat, szerkeszthet, törölhet jegyzetet, kezelheti a mapp�
 
 ## Hatókör
 ### SZEREPEL
+- A 06-ban jóváhagyott vizuális irány folytatása (V35: aktadosszié, Courier Prime, a `@theme` tokenekkel); új
+  megjelenési elem a meglévő tokenekre épüljön.
 - Új jegyzet létrehozása; ha mappa nézetben vagyunk, abba kerül (`POST` `folderId`-val)
 - Szerkesztő nézet: cím és szöveg, karakterszámlálók (x/100, x/10 000), Mentés, Törlés (megerősítéssel)
 - A szerver hibaüzenetének (`detail`, `errors`) megjelenítése; sikertelen mentés után a szerkesztő ne veszítse el a beírt szöveget
@@ -27,6 +29,9 @@ A tulajdonos létrehozhat, szerkeszthet, törölhet jegyzetet, kezelheti a mapp�
 ## Kész, ha
 - [ ] `npm run build` és `npm run lint` hibamentes
 - [ ] a kézi ellenőrzés lépései megírva a `docs/testing/manual/07.md` fájlba: számozott, reprodukálható lépések
+      PowerShell-parancsoknál a JSON törzset UTF-8 bájtokként küldd (`[Text.Encoding]::UTF8.GetBytes(...)`,
+      `-ContentType "application/json; charset=utf-8"`), mert a Windows PowerShell 5.1 a szöveges törzset Latin-1
+      kódolással küldi, és az ékezetes betűk miatt a kérés 400-at kap (a 06. kézi próbájában derült ki).
       elvárt eredménnyel (a böngészős próbát a fejlesztő végzi, az agent nem tud böngészőt kezelni). Lefedi:
       létrehozás → lista; szerkesztés; törlés; 100/101 karakteres cím és 10 000/10 001 karakteres szöveg;
       üres cím hibaüzenettel; duplikált mappanév hibaüzenettel; mappatörlés után a jegyzetek „Mappa nélküli” alatt vannak

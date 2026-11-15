@@ -188,17 +188,26 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
 ## 7. Frontend
 
 - Útvonalak: `/login`, `/register`, `/notes` (védett).
-- Fő nézet: oldalsáv (Összes, Mappa nélküli, mappák, „Velem megosztott"), jegyzetlista, szerkesztő.
+- Fő nézet: oldalsáv (Összes, Mappa nélküli, mappák, „Velem megosztott"), jegyzetlista, szerkesztő. Az „Összes” a
+  felhasználó SAJÁT összes jegyzete; a vele megosztottak csak a „Velem megosztott” nézetben látszanak (V36).
+  A választott nézet az URL-ben marad (`?view=`), így frissítés után is megmarad.
 - Technika: React Router, TanStack Query, saját `src/api.ts` fetch-wrapper (token, hibák), Tailwind CSS v4 a hivatalos
   `@tailwindcss/vite` pluginnal (komponenskönyvtár nélkül, V33).
 - Vizuális tervezés: a `frontend-design` plugin (Claude Code hivatalos marketplace, projekt hatókörrel telepítve)
   irányítja a felület megjelenését, Tailwind osztályokkal megvalósítva. A design tokenek (színek, betűtípus) a
   `src/index.css` `@theme` blokkjában vannak, nem szétszórva a komponensekben.
-- Fejlesztéskor a Vite proxyja továbbítja az `/api` hívásokat a backendnek (nincs CORS-konfiguráció).
+- Vizuális irány: régi FBI-aktákat idéző „aktadosszié” stílus, írógépes betűvel. Betűtípus: Courier Prime, a
+  `@fontsource/courier-prime` npm csomagból, helyben kiszolgálva (nincs CDN, nincs külső kérés); az „ő” és „ű”
+  betűt is tartalmazza (V35). A 07–08. feladat ugyanezt az irányt követi.
+- Statikus ellenőrzés: oxlint (`npm run lint`), mert a jelenlegi Vite sablon ezt adja; TypeScript `strict` (V34).
+- Fejlesztéskor a Vite proxyja továbbítja az `/api` hívásokat a backendnek (nincs CORS-konfiguráció). A backend
+  címe csak a `vite.config.ts`-ben van, a `NOTES_API_URL` környezeti változóval felülírható.
 - A gombokat a szerep alapján tiltjuk/rejtjük (olvasó csak olvas; szerkesztő nem lát törlést/megosztást),
   de a védelem a szerveren van.
 - Karakterszámlálók (cím x/100, szöveg x/10 000), a szerver `detail` üzenetének megjelenítése.
-- Szinkron: betöltéskor, mentés után, és „Frissítés" gombbal; valós idejű szinkron nincs.
+- Szinkron: betöltéskor, mentés után, és „Frissítés" gombbal; valós idejű szinkron nincs. A TanStack Query
+  ablakfókuszra nem tölt újra, és a 4xx válaszokat nem próbálja újra (azok nem átmeneti hibák).
+- Elérhetetlen backend (a proxy üres 5xx-et ad): a kliens „A szerver nem érhető el.” jellegű üzenetet mutat.
 - 401 válasz → kijelentkeztetés és irányítás a `/login`-ra. UI nyelve: magyar.
 
 ## 8. Tesztelési terv
@@ -239,7 +248,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V33.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V36.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -290,6 +299,11 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V33 Stílus: Tailwind CSS (v4, `@tailwindcss/vite`) a sima CSS helyett, a `frontend-design` pluginnal a vizuális
   tervezéshez; komponenskönyvtár (pl. MUI, shadcn) nincs. (A fejlesztő döntése a 06. feladat előtt; az eredeti terv
   sima CSS volt.)
+- V34 Linter: oxlint az ESLint helyett, mert a jelenlegi Vite sablon ezt adja (a fejlesztő döntése a 06. feladatban).
+- V35 Vizuális irány: „aktadosszié” (régi FBI-akták), Courier Prime betűvel a `@fontsource/courier-prime` csomagból,
+  helyben kiszolgálva. (Az MI „vonalas füzet” irányt és Literata betűt javasolt; a fejlesztő saját irányt adott,
+  és a felkínált betűk közül a valódi írógépes hatású Courier Prime-ot választotta a Consolas-szerű helyett.)
+- V36 Az „Összes” nézet a saját jegyzeteket mutatja; a megosztottak külön, a „Velem megosztott” nézetben.
 
 ## 10. Nem célok
 

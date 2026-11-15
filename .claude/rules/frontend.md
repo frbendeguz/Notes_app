@@ -16,6 +16,9 @@ paths:
 - Vizuális tervezés: a `frontend-design` skill irányelvei szerint, de ezek a szabályok az erősebbek (Tailwind,
   komponenskönyvtár nélkül; új npm csomag csak engedéllyel, külső betűtípus vagy CDN csak engedéllyel).
 - Hozzáférhetőség: minden űrlapmezőnek legyen címkéje, a gombok billentyűzettel is elérhetők, látható fókusz.
+- Vizuális irány (V35): „aktadosszié” (régi FBI-akták), Courier Prime betű (`@fontsource/courier-prime`, helyben).
+  A színek és a betű csak a `src/index.css` `@theme` tokenjeiből jöhetnek; új szín vagy betű a tokenek között legyen.
+- Statikus ellenőrzés: `npm run lint` (oxlint, V34). Ne cseréld ESLintre engedély nélkül.
 - A felület nyelve magyar.
 - A szerep szerinti tiltás/rejtés csak kényelmi réteg: a szerver 403/404 válaszát mindig kezelni kell.
 - A szerver hibaüzenetét (`detail`, `errors`) jelenítsd meg; sikertelen mentésnél a beírt szöveg megmarad.

@@ -12,6 +12,8 @@ Megosztás kezelése a tulajdonosnak, és a megosztott jegyzetek szerep szerinti
 
 ## Hatókör
 ### SZEREPEL
+- A 06-ban jóváhagyott vizuális irány folytatása (V35: aktadosszié, Courier Prime, a `@theme` tokenekkel); új
+  megjelenési elem a meglévő tokenekre épüljön.
 - Megosztás ablak/panel a tulajdonosnak: felhasználónév + szerep (Olvasó/Szerkesztő) megadása, a jelenlegi megosztások listája, visszavonás
 - Hibák érthető megjelenítése: nem létező felhasználó (404), önmaga (400), ismételt megosztás (409)
 - „Velem megosztott” nézet: lista és megnyitás; a jegyzeten látszik a szerep és a tulajdonos neve
@@ -25,6 +27,9 @@ Megosztás kezelése a tulajdonosnak, és a megosztott jegyzetek szerep szerinti
 ## Kész, ha
 - [ ] `npm run build` és `npm run lint` hibamentes
 - [ ] a kézi ellenőrzés lépései megírva a `docs/testing/manual/08.md` fájlba: számozott, reprodukálható lépések
+      PowerShell-parancsoknál a JSON törzset UTF-8 bájtokként küldd (`[Text.Encoding]::UTF8.GetBytes(...)`,
+      `-ContentType "application/json; charset=utf-8"`), mert a Windows PowerShell 5.1 a szöveges törzset Latin-1
+      kódolással küldi, és az ékezetes betűk miatt a kérés 400-at kap (a 06. kézi próbájában derült ki).
       elvárt eredménnyel (a böngészős próbát a fejlesztő végzi, az agent nem tud böngészőt kezelni). Lefedi:
       két böngészőprofillal: megosztás Olvasóként → csak olvas; Szerkesztőként → módosít, de nem töröl/oszt;
       visszavonás után a frissítéskor eltűnik; nem létező felhasználó, önmaga, ismétlés hibaüzenettel

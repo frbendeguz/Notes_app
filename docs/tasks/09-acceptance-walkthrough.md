@@ -16,7 +16,8 @@ kötelezően bemutatandó tesztesetek megjelölése.
 ### SZEREPEL
 - `docs/testing/acceptance.md`, feltételenként (AC1–AC8) egy szakasz:
   - **Ellenőrzési mód:** automatizált teszt(ek) `Osztály.Metódus` alakban, VAGY kézi ellenőrzés
-    számozott, reprodukálható lépésekkel és elvárt eredménnyel (a tisztán vizuális dolgokra, pl. a
+    számozott, reprodukálható lépésekkel és elvárt eredménnyel (PowerShell-parancsban a JSON törzs UTF-8 bájtokként,
+    lásd a 07. feladatot; a tisztán vizuális dolgokra, pl. a
     „Velem megosztott” lista megjelenése, hibaüzenet a felületen)
   - **Kategória:** normál / határeset / hibás bemenet / jogosulatlan művelet / regresszió
   - **Eredmény:** teljesül / részben / nem teljesül, a futás hivatkozásával

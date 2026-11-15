@@ -28,7 +28,7 @@ megosztott jegyzetek listája (egyelőre csak olvasható lista).
 - Vizuális irány: a `frontend-design` skill alapján a tervben röviden írd le a választott irányt (színek, tipográfia,
   elrendezés), és ezt hagyjam jóvá, mielőtt építesz rá. Ez az irány a 07–08. feladatban is érvényes marad.
 - Magyar feliratok
-- ESLint beállítás (a Vite sablon szerint)
+- Linter a Vite sablon szerint (a megvalósításkor ez oxlint lett, V34)
 
 ### NEM szerepel
 - Jegyzet szerkesztése/létrehozása/törlése, mappák kezelése, megosztás UI (07–08. feladat)
