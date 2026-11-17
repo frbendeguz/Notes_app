@@ -190,7 +190,10 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
 - Útvonalak: `/login`, `/register`, `/notes` (védett).
 - Fő nézet: oldalsáv (Összes, Mappa nélküli, mappák, „Velem megosztott"), jegyzetlista, szerkesztő. Az „Összes” a
   felhasználó SAJÁT összes jegyzete; a vele megosztottak csak a „Velem megosztott” nézetben látszanak (V36).
-  A választott nézet az URL-ben marad (`?view=`), így frissítés után is megmarad.
+  A nézet, a mappa és a megnyitott jegyzet az URL-ben van (`?view=folder&folder=<id>`, `&note=<id>`, új jegyzetnél
+  `&note=new`), így F5 után is megmarad (V37).
+- Elrendezés: széles képernyőn (lg) a lista és a szerkesztő egymás mellett (`max-w-7xl`); keskeny képernyőn a
+  megnyitott jegyzet a lista helyére kerül, „← Vissza a listához” linkkel (V43).
 - Technika: React Router, TanStack Query, saját `src/api.ts` fetch-wrapper (token, hibák), Tailwind CSS v4 a hivatalos
   `@tailwindcss/vite` pluginnal (komponenskönyvtár nélkül, V33).
 - Vizuális tervezés: a `frontend-design` plugin (Claude Code hivatalos marketplace, projekt hatókörrel telepítve)
@@ -205,6 +208,20 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
 - A gombokat a szerep alapján tiltjuk/rejtjük (olvasó csak olvas; szerkesztő nem lát törlést/megosztást),
   de a védelem a szerveren van.
 - Karakterszámlálók (cím x/100, szöveg x/10 000), a szerver `detail` üzenetének megjelenítése.
+- Szerkesztő (07. feladat):
+  - Új jegyzet: üres szerkesztő, a `POST` csak az első Mentéskor megy el; mappa nézetben a `folderId` az aktuális
+    mappa (V38).
+  - Mappaváltás: a szerkesztő „Mappa” legördülője a Mentéssel megy el. A Mentés két lépés: előbb `PUT /notes/{id}`
+    (ha a szöveg változott), utána `PUT /notes/{id}/folder` (ha a mappa változott). Ha a második elbukik (pl. a mappát
+    közben törölték → 404), a szöveg mentve marad, a mappa nem változik, és a felhasználó hibaüzenetet lát (V39).
+  - Kliensoldali validáció `maxLength` nélkül: a 101. karakter beírható, a számláló piros lesz, a Mentés nem megy el,
+    és a szerverével azonos szövegű üzenet jelenik meg. A címszámláló a levágott (trimmelt) hosszt mutatja, ahogy a
+    szerver számol. A szerver 400-as elutasítását a backend tesztek fedik le (V40).
+  - Mentetlen módosítás: a lapon belüli navigáció (másik jegyzet, nézet) és a Kilépés megerősítést kér
+    („Elveted a nem mentett módosításokat?”). A mappatörlés nem kér, mert nem zárja be a szerkesztőt. Az F5, a
+    lapbezárás és a böngésző Vissza gombja nem kérdez rá (nincs `beforeunload`), ez vállalt korlát (V42, V45).
+  - Ha a felhasználó az éppen megnyitott mappát törli, a „Mappa nélküli” nézet nyílik meg (V44).
+  - A „Velem megosztott” lista a 07-ben csak olvasható; a megnyitás a szerep szerinti tiltással a 08-ban jön (V41).
 - Szinkron: betöltéskor, mentés után, és „Frissítés" gombbal; valós idejű szinkron nincs. A TanStack Query
   ablakfókuszra nem tölt újra, és a 4xx válaszokat nem próbálja újra (azok nem átmeneti hibák).
 - Elérhetetlen backend (a proxy üres 5xx-et ad): a kliens „A szerver nem érhető el.” jellegű üzenetet mutat.
@@ -248,7 +265,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V36.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V45.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -304,6 +321,17 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
   helyben kiszolgálva. (Az MI „vonalas füzet” irányt és Literata betűt javasolt; a fejlesztő saját irányt adott,
   és a felkínált betűk közül a valódi írógépes hatású Courier Prime-ot választotta a Consolas-szerű helyett.)
 - V36 Az „Összes” nézet a saját jegyzeteket mutatja; a megosztottak külön, a „Velem megosztott” nézetben.
+- V37 A megnyitott jegyzet is az URL-ben van (`&note=<id>`, `&note=new`), nem csak helyi állapotban.
+- V38 Új jegyzet: a `POST` csak az első Mentéskor; mappa nézetben az aktuális mappába kerül.
+- V39 A mappaváltás a Mentés gombbal megy el, nem azonnal (az MI azonnali küldést javasolt, a fejlesztő a Mentéshez
+  kötötte, hogy egy művelet legyen). Következmény: kétlépéses mentés, részleges sikerrel (szöveg mentve, mappa nem).
+- V40 Kliensoldali validáció `maxLength` nélkül, trimmelt címhosszal; a kézi próba a kliens tiltását ellenőrzi.
+- V41 A „Velem megosztott” lista a 07-ben csak olvasható.
+- V42 Mentetlen módosításnál a lapon belüli navigáció megerősítést kér; `beforeunload` nincs.
+- V43 Kétoszlopos elrendezés széles képernyőn (`max-w-7xl`), keskenyen a szerkesztő a lista helyén.
+- V44 A megnyitott mappa törlése után a „Mappa nélküli” nézet nyílik.
+- V45 A Kilépés mentetlen módosításnál megerősítést kér; a mappatörlés nem, mert nem zárja be a szerkesztőt
+  (a 07. feladat reviewere vetette fel, a fejlesztő döntött).
 
 ## 10. Nem célok
 
