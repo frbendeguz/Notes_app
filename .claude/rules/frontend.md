@@ -23,4 +23,6 @@ paths:
 - A szerep szerinti tiltás/rejtés csak kényelmi réteg: a szerver 403/404 válaszát mindig kezelni kell.
 - A szerver hibaüzenetét (`detail`, `errors`) jelenítsd meg; sikertelen mentésnél a beírt szöveg megmarad.
 - A backend URL-jét ne égesd be: fejlesztéskor a Vite proxy továbbítja az `/api` hívásokat.
-- Feladat végén: `npm run build` és `npm run lint` hibamentes.
+- Tesztek (V48): Vitest + Testing Library, `*.test.tsx` a forrás mellett, `vitest` importtal (globális függvények
+  nélkül). Hibajavításnál a teszt a javítás előtt készül, és a hibás kódon az állításon kell elbuknia.
+- Feladat végén: `npm run build`, `npm run lint` és `npm test` hibamentes.

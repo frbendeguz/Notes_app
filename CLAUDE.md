@@ -22,7 +22,7 @@ szerepkörök (Tulajdonos / Szerkesztő / Olvasó). Egyetemi házi feladat.
 - Új migráció: `dotnet ef migrations add <Név> --project Notes.Api`
 - Adatbázis frissítése: `dotnet ef database update --project Notes.Api`
 - Backend futtatása: `dotnet run --project Notes.Api`
-- Frontend (a `notes-web/` mappában): `npm run dev`, `npm run build`, `npm run lint`
+- Frontend (a `notes-web/` mappában): `npm run dev`, `npm run build`, `npm run lint`, `npm test`
 
 ## Alapszabályok
 - Controllers (vékonyak) → Services → `AppDbContext`. Jogosultság KIZÁRÓLAG a `NoteAccessService`-ben.

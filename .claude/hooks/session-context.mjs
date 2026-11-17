@@ -12,7 +12,7 @@ try {
   const progress = readFileSync(join(projectDir, "docs", "progress.md"), "utf8");
   const items = progress.split(/\r?\n/).filter((l) => /^\s*- \[( |x|X)\]/.test(l));
   // Számozott agent-feladatok („- [ ] 03 – …”) a számláláshoz; a következő teendő bármelyik nyitott sor lehet.
-  const tasks = items.filter((l) => /^\s*- \[( |x|X)\]\s*\d{2}\b/.test(l));
+  const tasks = items.filter((l) => /^\s*- \[( |x|X)\]\s*\d{2}[a-z]?\b/.test(l));
   const done = tasks.filter((l) => /\[(x|X)\]/.test(l)).length;
   const next = items.find((l) => /\[ \]/.test(l));
   lines.push(`Haladás (docs/progress.md): ${done}/${tasks.length} számozott feladat kész.`);

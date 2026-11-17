@@ -221,6 +221,10 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
     („Elveted a nem mentett módosításokat?”). A mappatörlés nem kér, mert nem zárja be a szerkesztőt. Az F5, a
     lapbezárás és a böngésző Vissza gombja nem kérdez rá (nincs `beforeunload`), ez vállalt korlát (V42, V45).
   - Ha a felhasználó az éppen megnyitott mappát törli, a „Mappa nélküli” nézet nyílik meg (V44).
+  - Ha mentéskor a jegyzet mappája megváltozik, és a nézet egy mappa vagy a „Mappa nélküli”, a nézet arra vált, ahol
+    a jegyzet most van; a jegyzet megnyitva marad. Az „Összes” nézetben nincs váltás (V46).
+  - Sikertelen mentés (validációs, hálózati vagy szerverhiba): a hibaüzenet a szerkesztőn belül jelenik meg, a
+    szerkesztő és a beírt szöveg megmarad, és a Mentés újra megnyomható (V47).
   - A „Velem megosztott” lista a 07-ben csak olvasható; a megnyitás a szerep szerinti tiltással a 08-ban jön (V41).
 - Szinkron: betöltéskor, mentés után, és „Frissítés" gombbal; valós idejű szinkron nincs. A TanStack Query
   ablakfókuszra nem tölt újra, és a 4xx válaszokat nem próbálja újra (azok nem átmeneti hibák).
@@ -244,6 +248,9 @@ Integrációs tesztek (`WebApplicationFactory<Program>`, in-memory SQLite) a spe
 
 Egységtesztek: `NoteAccessService`, validátorok.
 
+Frontend: célzott regressziós tesztek Vitest + Testing Library + jsdom környezetben (`npm test`), a kézi próbán
+talált hibákra (V48). Teljes frontend-lefedettség nem cél; a többi frontend-viselkedést a kézi lépések ellenőrzik.
+
 A házi feladat követelményei szerint kötelezően bemutatandó (09–10. feladat, `docs/testing/`):
 - az elfogadási feltételekhez rendelt ellenőrzési mód (automatizált teszt vagy reprodukálható kézi lépések),
 - legalább 1 normál eset, 2 érdemi határeset, 1 hibás bemenet / jogosulatlan művelet, 1 regressziós eset,
@@ -265,7 +272,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V45.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V48.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -332,9 +339,16 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
 - V44 A megnyitott mappa törlése után a „Mappa nélküli” nézet nyílik.
 - V45 A Kilépés mentetlen módosításnál megerősítést kér; a mappatörlés nem, mert nem zárja be a szerkesztőt
   (a 07. feladat reviewere vetette fel, a fejlesztő döntött).
+- V46 Áthelyezés utáni nézetváltás: mappa vagy „Mappa nélküli” nézetben a nézet a jegyzet új helyére vált, a jegyzet
+  nyitva marad. (A fejlesztő kézi próbája találta a hiányt; két javasolt megoldásából az elsőt választotta, általánosítva.)
+- V47 Sikertelen mentésnél a szerkesztő és a beírt szöveg megmarad, a hiba a szerkesztőn belül jelenik meg. (A 07. kézi
+  próbája valódi hibát talált: leállított backend mellett a szöveg elveszett.)
+- V48 Frontend-tesztek: Vitest, `@testing-library/react`, `jsdom` fejlesztői függőségként, célzott regressziós
+  tesztekre. Az első a V47-es hibát rögzíti: a hibás változaton elbukik, a javítotton átmegy; ez a 10. feladat
+  valódi hibája.
 
 ## 10. Nem célok
 
 Valós idejű szinkron, csoportos megosztás, címkék/kategóriák, mappa átnevezése, szerepmódosítás,
 fiók törlése, jelszó-visszaállítás, belépési kísérletek korlátozása, HTTPS-konfiguráció az alapon túl,
-frontend automatizált tesztek (csak `build` és `lint` kötelező).
+teljes frontend-tesztlefedettség (csak célzott regressziós tesztek vannak, V48).

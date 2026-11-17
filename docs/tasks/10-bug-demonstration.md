@@ -14,7 +14,9 @@ hibafeltárás”, 5 pont.)
 
 ## Hatókör
 ### SZEREPEL
-Két út van; a választást a tervben indokold, és kérd a fejlesztő jóváhagyását.
+Két út van; a választást a tervben indokold, és kérd a fejlesztő jóváhagyását. **A tervezett út az A):** a 07b.
+feladatban javított hiba (sikertelen mentésnél elveszett a beírt szöveg, V47), amelynek elbukó és átmenő futása a
+`docs/testing/runs/07b-*` fájlokban van, a hibás változat pedig a 07. feladat commitja.
 
 **A) Valódi fejlesztési hiba** (ha a 01–09. feladat során volt ilyen, és megvan az elbukó és az átmenő futás kimenete):
 - `docs/testing/hibafeltaras.md`: a hiba leírása, az elvárt működés (melyik AC / design szabály),

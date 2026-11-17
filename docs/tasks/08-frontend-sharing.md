@@ -25,7 +25,7 @@ Megosztás kezelése a tulajdonosnak, és a megosztott jegyzetek szerep szerinti
 - Szerepmódosítás (V4), valós idejű értesítés a megosztásról
 
 ## Kész, ha
-- [ ] `npm run build` és `npm run lint` hibamentes
+- [ ] `npm run build`, `npm run lint` és `npm test` hibamentes
 - [ ] a kézi ellenőrzés lépései megírva a `docs/testing/manual/08.md` fájlba: számozott, reprodukálható lépések
       PowerShell-parancsoknál a JSON törzset UTF-8 bájtokként küldd (`[Text.Encoding]::UTF8.GetBytes(...)`,
       `-ContentType "application/json; charset=utf-8"`), mert a Windows PowerShell 5.1 a szöveges törzset Latin-1

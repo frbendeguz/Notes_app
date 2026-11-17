@@ -33,7 +33,7 @@ kötelezően bemutatandó tesztesetek megjelölése.
 - Ha a tesztek hibát találnak, ne javítsd ki csendben: írd a `docs/progress.md` megjegyzései közé,
   mentsd el a kimenetet (`docs/testing/runs/`), és kérdezz.
 - A teljes futás mentése: `dotnet test --logger "console;verbosity=normal" > docs/testing/runs/09-teljes-futas.txt`,
-  valamint `npm run build` és `npm run lint` eredménye az `acceptance.md` végére.
+  valamint `npm test`, `npm run build` és `npm run lint` eredménye az `acceptance.md` végére.
 - A `docs/design.md` V1–V13 döntéseinek ellenőrzése: megvalósult-e mindegyik úgy, ahogy le van írva
   (eltérés → lista a `docs/progress.md`-ben).
 
@@ -44,7 +44,7 @@ kötelezően bemutatandó tesztesetek megjelölése.
 ## Kész, ha
 - [ ] `docs/testing/acceptance.md` mind a 8 feltételt lefedi ellenőrzési móddal és eredménnyel
 - [ ] a „Kötelező esetek” táblázatban mind az 5 kategória konkrét teszttel szerepel
-- [ ] `docs/testing/runs/09-teljes-futas.txt` létezik, `dotnet test` zöld, `npm run build` és `npm run lint` hibamentes
+- [ ] `docs/testing/runs/09-teljes-futas.txt` létezik, `dotnet test` és `npm test` zöld, `npm run build` és `npm run lint` hibamentes
 - [ ] az eltérések és nyitott kérdések listája a `docs/progress.md`-ben
 - [ ] MI-napló bejegyzés (fázis: tesztelés), `docs/progress.md` 09 kipipálva
 

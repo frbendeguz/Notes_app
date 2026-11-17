@@ -17,7 +17,7 @@ Bemenet: a feladat száma (pl. „Ellenőrizd a 03. feladatot”).
    `docs/design.md` azon szakaszait, amelyekre a feladat hivatkozik.
 2. Nézd meg a változásokat: `git status` és `git diff` (az új, nem követett fájlokat is olvasd el).
 3. Futtasd az ellenőrzéseket, amelyek a feladatra vonatkoznak: `dotnet build`, `dotnet test`, és a
-   frontend feladatoknál a `notes-web/` mappában `npm run build` és `npm run lint`.
+   frontend feladatoknál a `notes-web/` mappában `npm run build`, `npm run lint` és `npm test`.
 4. Ellenőrizd:
    - **Hatókör:** van-e olyan változás, amely a feladat „NEM szerepel” listájába esik, vagy egyik
      listában sincs (pl. másik feladat része, kéretlen refaktor, nem engedélyezett csomag)?
