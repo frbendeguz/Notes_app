@@ -405,3 +405,79 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Döntési eset jelölt?** (a fejlesztő dönt) – lehetséges jelölt: a mappaváltás a Mentéshez kötése (az agent azonnali
   küldést javasolt).
 - **Korlát (hook):** a Bash-védő hook egy olvasó parancsot is blokkolt, mert a szövegében szerepelt a `design.md` neve, és írásra utaló jelet is tartalmazott. Az agent a Read eszközzel kerülte meg, kár nem keletkezett. A hookot szándékosan nem módosítottam: a heurisztika inkább legyen szigorú, mint engedékeny.
+
+## 07b – A 07. kézi próbájában talált két hiba javítása (2026-11-18)
+- **Fázis:** tesztelés
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/07b-editor-bugfixes.md`, design 7. („Szerkesztő” blokk), V39, V42, V44, V46–V48,
+  `docs/testing/manual/07.md` 25. és 31. lépés, CLAUDE.md, `.claude/rules/frontend.md`
+- **Hibás változat:** a tesztek a `2a1bee2` commiton futottak (HEAD a munka kezdetén); a frontendkódot utoljára a
+  `4a51135` módosította, azóta csak dokumentációs commitok jöttek (a 07. feladat kódja: `9f9e4cd`).
+- **Diagnózis (a terv része, kód előtt):**
+  - *31. lépés (V47):* a beírt szöveg azért vész el, mert a szerkesztő komponens lecsatolódik. A sikertelen `PUT`
+    után a `NoteEditor.tsx:151-154` beállítja a hibaüzenetet (a `draft` még megvan), de a `finally` ág
+    (`NoteEditor.tsx:157`) hibánál is meghívja a `refreshLists()`-t, amely a teljes `['notes']` előtagot
+    érvényteleníti (`NoteEditor.tsx:114`). Ebbe a megnyitott jegyzet részletes lekérdezése is beletartozik
+    (`['notes','detail',id]`, `views.ts:83`). Az újratöltés a leállított backend miatt elbukik (a 0-s státuszt a
+    `main.tsx:18-19` egyszer még újrapróbálja), a lekérdezés `error` állapotba kerül, bár a korábbi adat megvan.
+    A `NotesPage.tsx:98-107` ilyenkor a `NoteEditor` helyére a hibablokkot (üzenet + Bezárás) teszi, ezért a
+    szerkesztő a helyi `draft` állapottal együtt lecsatolódik. Újraindítás után a szerkesztő már a szerveren tárolt
+    szöveggel nyílik. Az ok a frontend, nem a backend.
+  - *25. lépés (V46):* sikeres áthelyezés után a `NoteEditor.tsx:143-147` csak a saját `saved` állapotát frissíti;
+    a szülőnek nem szól (nincs ilyen callback, `NotesPage.tsx:108-118`), így az URL-ből olvasott nézet
+    (`NotesPage.tsx:35`) a régi mappa marad, az újratöltött listából pedig a jegyzet kiesik.
+- **Terv és módosításai:** az agent három kérdést tett fel; a fejlesztő döntései: (1) a `@testing-library/react`
+  kötelező peer-függősége, a `@testing-library/dom` kifejezetten fejlesztői függőségként kerüljön be; (2) a V46-os
+  szabály az új jegyzetre is vonatkozzon (mappa nézetben indított, de más mappába / mappa nélkül létrehozott jegyzet
+  után a nézet a jegyzet helyére vált); (3) a nézetváltás `replace` navigációval megy, mint az új jegyzet
+  létrehozásakor. A tervet ezekkel jóváhagyta.
+- **Megvalósítás:**
+  - Tesztkörnyezet (V48): `vitest` 5.1.1, `@testing-library/react` 16.3.3, `@testing-library/dom` 10.4.2,
+    `jsdom` 29.1.1 fejlesztői függőségként; `vite.config.ts`: `test.environment: 'jsdom'`
+    (`/// <reference types="vitest/config" />`); `"test": "vitest run"`.
+  - 31: `NotesPage.tsx` – ha a jegyzet adata már megvan, a szerkesztő akkor is megmarad, ha egy későbbi újratöltés
+    elbukik; a hibablokk csak a be sem tölthető jegyzetnél (pl. 404) jelenik meg.
+  - 25: `views.ts` – új tiszta függvény, `viewAfterMove(view, folderId)`; `NoteEditor.tsx` – új `onMoved` prop,
+    csak sikeres `PUT /folder` után hívódik (részleges siker, azaz szöveg mentve, mappa nem, esetén nem);
+    `NotesPage.tsx` – `showSavedNote`: áthelyezés és létrehozás után a nézet a jegyzet helyére vált (`replace`).
+  - Tesztek: `src/pages/NotesPage.test.tsx` (2 eset: hálózati hiba, törzs nélküli 502; a `NotesPage` valós
+    `QueryClientProvider`-rel, `MemoryRouter`-rel és hamis `AuthContext`-tel, `fetch` mockolva, a teszt
+    `QueryClient`-je `retry: false`), `src/notes/views.test.ts` (6 eset a `viewAfterMove`-ra).
+  - `docs/testing/manual/07.md`: a 25. és 31. lépés elvárt eredménye a javított viselkedés szerint; a fejlesztő
+    eredménysorai megmaradtak „Újrafuttatásra vár (07b).” jelöléssel. A 31. sor eredménycellájában a záró `|` előtti
+    sortörés kettévágta a táblázatsort; a sortörést törölte, a szöveg változatlan.
+- **Eltérés a tervtől megvalósítás közben:**
+  - A `views.test.ts` `.ts` kiterjesztésű (a forrás `.ts`, JSX nincs benne); a vitest alapbeállítása mindkettőt
+    futtatja.
+  - Az első javítás egymásba ágyazott `if`-et használt; a SonarLint (IDE) kognitív komplexitás-jelzése miatt az
+    „átmegy” futás mentése előtt kilapította (két egymás utáni feltétel, ugyanaz a viselkedés).
+- **Blokkolt műveletek (hook/jogosultság):** –
+- **Elbukó tesztek valódi hiba miatt:** `NotesPage – failed save (V47)` mindkét esete a hibás kódon az állításon
+  bukott el: „a szerkesztő „Szöveg” mezője látható marad: expected null not to be null”
+  (`docs/testing/runs/07b-failed-save-keeps-draft-elbukik.txt`). A javítás után 2/2 zöld
+  (`docs/testing/runs/07b-failed-save-keeps-draft-atmegy.txt`). A hiba oka a diagnózisban.
+- **Reviewer megállapításai:** ítélet: „nem zárható le” két blokkoló miatt (a reviewer saját futása: `npm test` 8/8,
+  build sikeres, lint 0 jelzés, `dotnet test` 218/218; az `…-elbukik.txt` az állításon bukik el, az `…-atmegy.txt`
+  2/2). Blokkolók és sorsuk: (1) a `progress.md`-ben a 07b nincs kipipálva → a lezárás utolsó lépéseként kipipálva;
+  (2) a diagnózisban hibás hivatkozás: `main.tsx:176` (a fájl rövidebb; az agent a több fájl összefűzött
+  listázásának sorszámát vette át) → javítva `main.tsx:18-19`-re (a tervben, a fejlesztőnek is ez a hibás szám
+  szerepelt). Nem blokkolók: (3) a `@testing-library/dom` és az `onCreated` nézetváltása nincs a feladatfájlban →
+  mindkettő a fejlesztő döntése, nem változott; (4) a napló hiányos „Reviewer” sora és a címsor előtti hiányzó üres
+  sor → javítva; (5) a teszt `QueryClient`-je `retry: false`, az éles egyszeri újrapróbálás nincs lefedve → nem
+  változott, a hiba lényegét (a lekérdezés hibája lecsatolta a szerkesztőt) a teszt így is igazolja; (6) a 25-ös
+  hibánál a `NotesPage` navigációjára nincs automatizált teszt, csak a `viewAfterMove`-ra → nem változott (a feladat
+  ennyit kér), a 25. kézi lépés igazolja; (7) a 31. kézi lépés elvárt eredménye feltételes volt („a lista fölött is
+  megjelenhet”) → egyértelműsítve; (8) a kézi lépések újrafuttatása a fejlesztőre vár → egyetértés.
+- **Ellenőrzés:** `npm test`: 2 fájl, 8/8 teszt; `npm run build`: sikeres; `npm run lint` (oxlint): 0-s kilépési kód,
+  jelzés nélkül; `dotnet test`: 218/218. Az `npm install` után az `npm audit` 6 magas súlyosságú jelzést ad, mind a
+  `picomatch` csomagból (a vite, a vitest és a `@vitejs/plugin-react` függősége); a javasolt `npm audit fix --force` a
+  vite-ot 6.x-re léptetné vissza, ezért nem futott. Böngészős próbát az agent nem végzett; a 25. és 31. kézi lépés
+  újrafuttatása a fejlesztőre vár.
+- **Fejlesztői döntés:**
+  - *Tesztkörnyezet:* a `@testing-library/dom`-ot kifejezetten fejlesztői függőségként vettem fel. A `@testing-library/react` kötelező peer-függősége, és így a `package.json` is mutatja, nem csak a lockfájl.
+  - *Nézetváltás új jegyzetnél (V46 kiterjesztése):* a V46-ot az új jegyzetre is kiterjesztettem, mert mappa nézetben másik mappába mentett új jegyzetnél ugyanaz a hiba jelentkezne: a jegyzet kiesne az aktuális listából.
+  - *`replace` navigáció:* elfogadtam. A nézetváltás a mentés következménye, nem a felhasználó lépése, ezért a Vissza gombnak nem kell rá visszavezetnie; így egyezik a már meglévő `onCreated` viselkedéssel.
+  - *A reviewer nem javított pontjai:* elfogadtam. A nézetváltás navigációjára nem kell automatizált teszt, mert a tiszta függvényt (`viewAfterMove`) 6 egységteszt fedi, a navigációt pedig a kézi 25. lépés ellenőrzi.
+- **Ellenőrzés (fejlesztő):** a hibás változaton mentett futásban (`docs/testing/runs/07b-…-elbukik.txt`) a teszt a „Szöveg” mező hiányán bukik el, a javítás utáni futás (`…-atmegy.txt`) zöld; saját futtatásom: `npm test` 8/8, `dotnet test` 218/218. A `07.md` 25. és 31. lépését, valamint az új, 37. lépést újrafuttattam: Az elvárt eredménynek megfelelő eredméynt kaptam midegyiknél.
+- **Döntési eset jelölt?** igen (a fejlesztő dönt) – a 31-es hiba a 10. feladat „valódi fejlesztési hibája” (V48):
+  a fejlesztő kézi próbája találta, az automatizált teszt a hibás változaton elbukik, a javítotton átmegy.

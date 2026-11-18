@@ -18,9 +18,12 @@ import {
   NEW_NOTE,
   noteDetailQueryKey,
   notesQueryKey,
+  sameView,
+  viewAfterMove,
   viewFromParams,
   viewPath,
 } from '../notes/views'
+import type { NoteDetail } from '../types'
 
 /** What the unsaved changes dialog does when the user chooses to discard. */
 type PendingLeave = { kind: 'navigate'; to: string } | { kind: 'logout' }
@@ -79,6 +82,13 @@ export function NotesPage() {
   const emptyText = view.kind === 'folder' ? FOLDER_EMPTY_TEXT : fixedViewTexts[view.kind].emptyText
   const editorOpen = openNote !== null
 
+  // A saved note whose folder differs from a folder/"Mappa nélküli" view: the view follows the note, which stays
+  // open (V46). `replace`: the old view no longer lists the note, so Back should not return to it.
+  function showSavedNote(note: NoteDetail) {
+    const next = viewAfterMove(view, note.folderId)
+    if (note.id !== openNote || !sameView(next, view)) void navigate(viewPath(next, note.id), { replace: true })
+  }
+
   function renderEditor() {
     if (isNew) {
       return (
@@ -87,15 +97,18 @@ export function NotesPage() {
           note={null}
           folders={folders.data}
           defaultFolderId={view.kind === 'folder' ? view.folderId : null}
-          onCreated={(created) => navigate(viewPath(view, created.id), { replace: true })}
+          onCreated={showSavedNote}
+          onMoved={() => undefined}
           onDeleted={() => navigate(viewPath(view))}
           onClose={() => go(viewPath(view))}
           onDirtyChange={setDirty}
         />
       )
     }
-    if (detail.isPending) return <p role="status">Betöltés…</p>
-    if (detail.isError) {
+    // Once the note is loaded, the editor stays mounted even if a later reload fails (e.g. the lists are
+    // refreshed after a failed save while the backend is down): unmounting it would lose the typed text (V47).
+    // The error block is only for a note that could not be loaded at all (e.g. 404).
+    if (!detail.data && detail.isError) {
       return (
         <div className="rounded-sm bg-paper px-5 py-6 sm:px-8">
           <ErrorAlert className="mb-4">{errorMessage(detail.error)}</ErrorAlert>
@@ -105,6 +118,7 @@ export function NotesPage() {
         </div>
       )
     }
+    if (!detail.data) return <p role="status">Betöltés…</p>
     return (
       <NoteEditor
         key={detail.data.id}
@@ -112,6 +126,7 @@ export function NotesPage() {
         folders={folders.data}
         defaultFolderId={null}
         onCreated={() => undefined}
+        onMoved={showSavedNote}
         onDeleted={() => navigate(viewPath(view), { replace: true })}
         onClose={() => go(viewPath(view))}
         onDirtyChange={setDirty}

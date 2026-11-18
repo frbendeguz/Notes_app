@@ -60,6 +60,15 @@ export function viewPath(view: NoteView, noteId: string | null = null): string {
   return query ? `/notes?${query}` : '/notes'
 }
 
+/**
+ * The view to show after a save put the note into `folderId` (V46): a folder view and "Mappa nélküli" follow the
+ * note to its new place (the folder, or "Mappa nélküli" without one); "Összes" and "Velem megosztott" stay.
+ */
+export function viewAfterMove(view: NoteView, folderId: string | null): NoteView {
+  if (view.kind !== 'folder' && view.kind !== 'unfiled') return view
+  return folderId ? { kind: 'folder', folderId } : { kind: 'unfiled' }
+}
+
 export function sameView(a: NoteView, b: NoteView): boolean {
   if (a.kind === 'folder' && b.kind === 'folder') return a.folderId === b.folderId
   return a.kind === b.kind

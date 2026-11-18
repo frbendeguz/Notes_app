@@ -16,7 +16,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 05 – Megosztás (`tasks/05-sharing.md`)
 - [x] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
 - [x] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
-- [ ] 07b – A 07. kézi próbájában talált két hiba javítása, frontend-teszttel (`tasks/07b-editor-bugfixes.md`)
+- [x] 07b – A 07. kézi próbájában talált két hiba javítása, frontend-teszttel (`tasks/07b-editor-bugfixes.md`)
 - [ ] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [ ] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
 - [ ] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
@@ -107,4 +107,14 @@ a commitot a fejlesztő hagyja jóvá.
   próbát nem végzett.
 - 07 → 08: a megosztott jegyzet megnyitása (`?view=shared&note=` jelenleg figyelmen kívül marad) és a szerep szerinti tiltás a
   `NoteEditor`-ban; az editor szerkesztő szerepnél a Törlést és a Mappa mezőt rejtse.
+- 07b: fejlesztői döntések: a `@testing-library/dom` (a `@testing-library/react` peer-függősége) kifejezetten
+  fejlesztői függőség; a V46 az új jegyzetre is vonatkozik (mappa nézetben más mappába / mappa nélkül létrehozott
+  jegyzet után a nézet a jegyzet helyére vált); a nézetváltás `replace` navigációval megy. Javaslat: a design 7.
+  „Szerkesztő” blokkjában a V46 kiegészítése az új jegyzettel (a fejlesztő dönt).
+- 07b: a `docs/testing/manual/07.md` 25. és 31. lépése újrafuttatásra vár (fejlesztő); az agent böngészős próbát nem végzett.
+  Javaslat: új kézi lépés a „mappa nézetben új jegyzet más mappába” esetre (V46 új jegyzetnél).
+- 07b: az `npm audit` 6 magas súlyosságú jelzést ad (`picomatch`, a vite/vitest láncon); az `npm audit fix --force` a
+  vite-ot 6.x-re léptetné vissza, ezért nem futott – a fejlesztő dönt.
+- 07b → 10: a valódi hiba bizonyítékai: `docs/testing/runs/07b-failed-save-keeps-draft-elbukik.txt` / `…-atmegy.txt`,
+  teszt: `notes-web/src/pages/NotesPage.test.tsx`; hibás változat: `2a1bee2` (frontendkód: `4a51135`).
 - 06 napló: a fejlesztői „Ellenőrzés (fejlesztő)” sorban csonka mondat maradt („…megjelent. is a „szerver nem érhető el”…”).

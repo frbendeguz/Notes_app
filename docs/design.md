@@ -221,8 +221,10 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
     („Elveted a nem mentett módosításokat?”). A mappatörlés nem kér, mert nem zárja be a szerkesztőt. Az F5, a
     lapbezárás és a böngésző Vissza gombja nem kérdez rá (nincs `beforeunload`), ez vállalt korlát (V42, V45).
   - Ha a felhasználó az éppen megnyitott mappát törli, a „Mappa nélküli” nézet nyílik meg (V44).
-  - Ha mentéskor a jegyzet mappája megváltozik, és a nézet egy mappa vagy a „Mappa nélküli”, a nézet arra vált, ahol
-    a jegyzet most van; a jegyzet megnyitva marad. Az „Összes” nézetben nincs váltás (V46).
+  - Ha mentéskor a jegyzet mappája megváltozik (áthelyezés), vagy egy új jegyzet más helyre kerül, mint az aktuális
+    nézet, és a nézet egy mappa vagy a „Mappa nélküli”, a nézet arra vált, ahol a jegyzet most van; a jegyzet
+    megnyitva marad. Az „Összes” nézetben nincs váltás. A váltás `replace` navigációval történik, így a böngésző
+    Vissza gombja nem a régi nézetre lép (V46).
   - Sikertelen mentés (validációs, hálózati vagy szerverhiba): a hibaüzenet a szerkesztőn belül jelenik meg, a
     szerkesztő és a beírt szöveg megmarad, és a Mentés újra megnyomható (V47).
   - A „Velem megosztott” lista a 07-ben csak olvasható; a megnyitás a szerep szerinti tiltással a 08-ban jön (V41).
@@ -248,7 +250,7 @@ Integrációs tesztek (`WebApplicationFactory<Program>`, in-memory SQLite) a spe
 
 Egységtesztek: `NoteAccessService`, validátorok.
 
-Frontend: célzott regressziós tesztek Vitest + Testing Library + jsdom környezetben (`npm test`), a kézi próbán
+Frontend: célzott regressziós tesztek Vitest + Testing Library (`react` és `dom`) + jsdom környezetben (`npm test`), a kézi próbán
 talált hibákra (V48). Teljes frontend-lefedettség nem cél; a többi frontend-viselkedést a kézi lépések ellenőrzik.
 
 A házi feladat követelményei szerint kötelezően bemutatandó (09–10. feladat, `docs/testing/`):
@@ -341,9 +343,12 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
   (a 07. feladat reviewere vetette fel, a fejlesztő döntött).
 - V46 Áthelyezés utáni nézetváltás: mappa vagy „Mappa nélküli” nézetben a nézet a jegyzet új helyére vált, a jegyzet
   nyitva marad. (A fejlesztő kézi próbája találta a hiányt; két javasolt megoldásából az elsőt választotta, általánosítva.)
+  A 07b-ben a fejlesztő kiterjesztette az új jegyzetre is (más mappába vagy mappa nélkül mentve); a váltás `replace`
+  navigációval megy, a Vissza gomb nem a régi nézetre lép.
 - V47 Sikertelen mentésnél a szerkesztő és a beírt szöveg megmarad, a hiba a szerkesztőn belül jelenik meg. (A 07. kézi
   próbája valódi hibát talált: leállított backend mellett a szöveg elveszett.)
-- V48 Frontend-tesztek: Vitest, `@testing-library/react`, `jsdom` fejlesztői függőségként, célzott regressziós
+- V48 Frontend-tesztek: Vitest, `@testing-library/react`, `@testing-library/dom` (a `react` csomag kötelező
+  peer-függősége, kifejezetten felvéve), `jsdom` fejlesztői függőségként, célzott regressziós
   tesztekre. Az első a V47-es hibát rögzíti: a hibás változaton elbukik, a javítotton átmegy; ez a 10. feladat
   valódi hibája.
 

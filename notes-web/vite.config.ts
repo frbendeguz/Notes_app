@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -14,5 +15,10 @@ export default defineConfig({
     proxy: {
       '/api': backendUrl,
     },
+  },
+  // Targeted regression tests (V48): Vitest + Testing Library in jsdom, `*.test.tsx` next to the source,
+  // test functions imported from 'vitest' (no globals).
+  test: {
+    environment: 'jsdom',
   },
 })

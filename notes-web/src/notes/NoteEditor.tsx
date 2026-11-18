@@ -41,6 +41,8 @@ interface NoteEditorProps {
   /** Folder of a new note: the folder view it was started from (POST folderId). */
   defaultFolderId: string | null
   onCreated: (note: NoteDetail) => void
+  /** A save moved the note to another folder (PUT /folder succeeded): the page can follow it (V46). */
+  onMoved: (note: NoteDetail) => void
   onDeleted: () => void
   onClose: () => void
   onDirtyChange: (dirty: boolean) => void
@@ -56,6 +58,7 @@ export function NoteEditor({
   folders,
   defaultFolderId,
   onCreated,
+  onMoved,
   onDeleted,
   onClose,
   onDirtyChange,
@@ -140,14 +143,16 @@ export function NoteEditor({
         setSaved((current) => ({ ...current, title: updated.title, content: updated.content }))
         setDraft((current) => ({ ...current, title: updated.title }))
       }
+      let moved: NoteDetail | null = null
       if (toSave.folderId !== saved.folderId) {
-        const moved = await api.moveNote(note.id, toSave.folderId || null)
+        moved = await api.moveNote(note.id, toSave.folderId || null)
         remember(moved)
         setSaved(draftOf(moved))
       }
       setErrors({})
       setError(null)
       setJustSaved(true)
+      if (moved) onMoved(moved)
     } catch (caught: unknown) {
       // The draft is untouched: the user can fix it and save again.
       setErrors(caught instanceof ApiError ? caught.errors : {})
