@@ -16,6 +16,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 05 – Megosztás (`tasks/05-sharing.md`)
 - [x] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
 - [x] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
+- [ ] 07b – A 07. kézi próbájában talált két hiba javítása, frontend-teszttel (`tasks/07b-editor-bugfixes.md`)
 - [ ] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [ ] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
 - [ ] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)

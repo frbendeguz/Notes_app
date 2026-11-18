@@ -18,6 +18,8 @@
       "Bash(dotnet ef --version)",
       "Bash(npm run build)",
       "Bash(npm run lint)",
+      "Bash(npm test)",
+      "Bash(npm test *)",
       "Bash(npm ci)",
       "Bash(git tag --list *)",
       "Bash(git merge-base *)",
