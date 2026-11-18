@@ -12,6 +12,11 @@ Megosztás kezelése a tulajdonosnak, és a megosztott jegyzetek szerep szerinti
 
 ## Hatókör
 ### SZEREPEL
+- **Első lépés, a megosztás előtt (V49):** a függőségek biztonsági állapotának ellenőrzése és dokumentálása. A
+  fejlesztő ellenőrzése szerint a commitolt állapotban a `vite` 8.x és az `npm audit` 0 sebezhetőséget jelez. Futtasd
+  és mentsd: `npm audit` → `docs/testing/runs/08-npm-audit.txt`, `npm ls picomatch` → `…/08-npm-ls-picomatch.txt`.
+  Ha mégis jelez sebezhetőséget, állj meg és szólj; `npm audit fix --force` TILOS, mert a vite főverzióját
+  visszaléptetheti.
 - A 06-ban jóváhagyott vizuális irány folytatása (V35: aktadosszié, Courier Prime, a `@theme` tokenekkel); új
   megjelenési elem a meglévő tokenekre épüljön.
 - Megosztás ablak/panel a tulajdonosnak: felhasználónév + szerep (Olvasó/Szerkesztő) megadása, a jelenlegi megosztások listája, visszavonás
@@ -26,6 +31,7 @@ Megosztás kezelése a tulajdonosnak, és a megosztott jegyzetek szerep szerinti
 
 ## Kész, ha
 - [ ] `npm run build`, `npm run lint` és `npm test` hibamentes
+- [ ] `npm audit` 0 sebezhetőséget jelez, a vite 8.x; a két kimenet mentve
 - [ ] a kézi ellenőrzés lépései megírva a `docs/testing/manual/08.md` fájlba: számozott, reprodukálható lépések
       PowerShell-parancsoknál a JSON törzset UTF-8 bájtokként küldd (`[Text.Encoding]::UTF8.GetBytes(...)`,
       `-ContentType "application/json; charset=utf-8"`), mert a Windows PowerShell 5.1 a szöveges törzset Latin-1

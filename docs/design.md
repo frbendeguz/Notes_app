@@ -274,7 +274,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V48.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V49.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -351,6 +351,12 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
   peer-függősége, kifejezetten felvéve), `jsdom` fejlesztői függőségként, célzott regressziós
   tesztekre. Az első a V47-es hibát rögzíti: a hibás változaton elbukik, a javítotton átmegy; ez a 10. feladat
   valódi hibája.
+- V49 Függőségek biztonsága: a 07b után az `npm audit` magas súlyosságú `picomatch` ReDoS-hibát jelzett
+  (GHSA-c2c7-rcm5-vvqj). A fejlesztő ellenőrzése szerint a commitolt állapotban a vite főverziója változatlan (8.x),
+  és az `npm audit` 0 sebezhetőséget jelez; a 08. feladat ezt dokumentálja. Szabály: `npm audit fix --force` nem
+  használható, mert törő változással a vite főverzióját visszaléptetheti; sebezhetőségnél előbb a meglévő
+  főágon javított verziót kell keresni (`npm update`, szükség esetén `overrides`). A gyakorlati kockázat alacsony volt:
+  a csomagot csak a fejlesztői eszközök használják, megbízható mintákkal; a böngészőbe kerülő kódban nincs benne.
 
 ## 10. Nem célok
 
