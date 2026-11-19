@@ -35,6 +35,10 @@ export const fixedViewTexts: Record<FixedViewKind, FixedViewText> = {
 
 export const FOLDER_EMPTY_TEXT = 'Ebben a mappában nincs jegyzet.'
 
+/** Shown on the open note when reloading it answers 404/403 (task 08: revoked share or deleted note). */
+export const NOTE_UNAVAILABLE =
+  'A jegyzet már nem érhető el: törölték, vagy visszavonták a megosztását. A lista frissült.'
+
 /** Value of `?note=` while a not yet saved new note is open. */
 export const NEW_NOTE = 'new'
 
@@ -90,6 +94,11 @@ export function notesQueryKey(view: NoteView): readonly unknown[] {
 
 export function noteDetailQueryKey(id: string): readonly unknown[] {
   return ['notes', 'detail', id]
+}
+
+/** Under 'notes', so "Frissítés" and saving reload the share list too. */
+export function sharesQueryKey(noteId: string): readonly unknown[] {
+  return ['notes', 'shares', noteId]
 }
 
 export function loadNotes(view: NoteView): Promise<NoteSummary[]> {

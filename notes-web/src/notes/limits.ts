@@ -11,6 +11,8 @@ export const TITLE_TOO_LONG = `A cím legfeljebb ${TITLE_MAX} karakter lehet.`
 export const CONTENT_TOO_LONG = `A szöveg legfeljebb ${CONTENT_MAX} karakter lehet.`
 export const FOLDER_NAME_REQUIRED = 'A mappa nevének megadása kötelező.'
 export const FOLDER_NAME_TOO_LONG = `A mappa neve legfeljebb ${FOLDER_NAME_MAX} karakter lehet.`
+// Notes.Api/Services/ShareService.cs
+export const SHARE_USER_NAME_REQUIRED = 'A felhasználónév megadása kötelező.'
 
 /** Character count as the server counts it: UTF-16 code units (V3), title after Trim() (V2). */
 export function titleLength(title: string): number {

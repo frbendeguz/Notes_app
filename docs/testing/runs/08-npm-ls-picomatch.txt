@@ -1,0 +1,10 @@
+notes-web@0.0.0 C:\Work\NOTES APP\Notes_app\notes-web
++-- vite@8.3.8
+| +-- picomatch@4.0.7
+| `-- tinyglobby@0.2.17
+|   +-- fdir@6.5.0
+|   | `-- picomatch@4.0.7 deduped
+|   `-- picomatch@4.0.7 deduped
+`-- vitest@5.1.1
+  `-- picomatch@4.0.7 deduped
+

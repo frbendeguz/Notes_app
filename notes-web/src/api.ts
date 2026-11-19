@@ -1,6 +1,15 @@
 // The only place that calls fetch (frontend rules). Adds the Bearer token, sends/reads JSON,
 // turns ProblemDetails into ApiError, and logs the user out on 401 (design 7).
-import type { AuthResponse, FieldErrors, Folder, MeResponse, NoteDetail, NoteSummary } from './types'
+import type {
+  AuthResponse,
+  FieldErrors,
+  Folder,
+  MeResponse,
+  NoteDetail,
+  NoteSummary,
+  ShareInfo,
+  ShareRole,
+} from './types'
 
 const TOKEN_KEY = 'notes.token'
 
@@ -141,6 +150,20 @@ export const api = {
   createFolder: (name: string) => apiFetch<Folder>('/api/folders', { method: 'POST', body: { name } }),
   /** The notes of the folder stay and become folderless (D4). */
   deleteFolder: (id: string) => apiFetch<null>(`/api/folders/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  /** The shares of an own note, ordered by user name (V32). Owner only: others get 403/404. */
+  shares: (noteId: string) => apiFetch<ShareInfo[]>(`/api/notes/${encodeURIComponent(noteId)}/shares`),
+  /** 404 unknown user, 400 self (errors.userName), 409 already shared (V10, V30). */
+  shareNote: (noteId: string, userName: string, role: ShareRole) =>
+    apiFetch<ShareInfo>(`/api/notes/${encodeURIComponent(noteId)}/shares`, {
+      method: 'POST',
+      body: { userName, role },
+    }),
+  /** Revokes a share; the note stays with the owner. A share that is already gone → 404. */
+  revokeShare: (noteId: string, userId: string) =>
+    apiFetch<null>(`/api/notes/${encodeURIComponent(noteId)}/shares/${encodeURIComponent(userId)}`, {
+      method: 'DELETE',
+    }),
 }
 
 export type OwnNotesFilter = { kind: 'all' } | { kind: 'unfiled' } | { kind: 'folder'; folderId: string }

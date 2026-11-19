@@ -6,7 +6,7 @@ const dateFormat = new Intl.DateTimeFormat('hu-HU', { dateStyle: 'medium', timeS
 
 interface NoteListProps {
   notes: NoteSummary[]
-  /** Shared view: role and owner are shown, and the rows do not open (opening comes with the roles in task 08). */
+  /** Shared view: the caller's role and the owner are shown on every row (task 08). */
   showSharing: boolean
   selectedId: string | null
   /** The address that opens a note in the current view. */
@@ -14,7 +14,7 @@ interface NoteListProps {
   onNavigate: (to: string) => void
 }
 
-/** Title and last update; own notes open in the editor, the open one is marked. */
+/** Title and last update; every row opens the note in the editor, the open one is marked. */
 export function NoteList({ notes, showSharing, selectedId, noteLink, onNavigate }: NoteListProps) {
   return (
     <ul>
@@ -30,18 +30,6 @@ export function NoteList({ notes, showSharing, selectedId, noteLink, onNavigate 
         )
         const rowLayout = 'grid gap-x-6 gap-y-1 py-3 sm:grid-cols-[1fr_auto] sm:items-baseline'
 
-        if (showSharing) {
-          return (
-            <li key={note.id} className={`${rowLayout} border-b-2 border-dotted border-manila-dark`}>
-              {content}
-              <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm sm:col-span-2">
-                <RoleStamp role={note.role} />
-                <span className="text-faded">Tulajdonos: {note.ownerUserName}</span>
-              </span>
-            </li>
-          )
-        }
-
         const isSelected = note.id === selectedId
         return (
           <li key={note.id} className="border-b-2 border-dotted border-manila-dark">
@@ -56,6 +44,12 @@ export function NoteList({ notes, showSharing, selectedId, noteLink, onNavigate 
               ].join(' ')}
             >
               {content}
+              {showSharing && (
+                <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm sm:col-span-2">
+                  <RoleStamp role={note.role} />
+                  <span className="text-faded">Tulajdonos: {note.ownerUserName}</span>
+                </span>
+              )}
             </GuardedLink>
           </li>
         )

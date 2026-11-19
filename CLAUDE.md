@@ -47,3 +47,4 @@ szerepkörök (Tulajdonos / Szerkesztő / Olvasó). Egyetemi házi feladat.
   beszámoló. Ami nem teljesül, azt ne jelöld késznek. Commitot csak a kérésemre készíts.
 - A dokumentáció (napló, tesztjelentés) beadandó anyag: csak tényt írj bele, a döntéseimet ne találd ki.
 - Ha ugyanazt a hibát kétszer javítom ki nálad, javasold, hogy vegyük fel ebbe a fájlba vagy a szabályokba.
+- Fájlt a Read/Grep/Edit/Write eszközzel olvass és módosíts, ne shell-paranccsal (`cat`, `>>`, `sed`); a shellt build, teszt, git és csomagkezelés futtatására használd.

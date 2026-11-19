@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { api, errorMessage } from '../api'
+import { api, ApiError, errorMessage } from '../api'
 import { useAuth } from '../auth/useAuth'
 import { primaryButton, secondaryButton } from '../components/buttonStyles'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -16,6 +16,7 @@ import {
   foldersQueryKey,
   loadNotes,
   NEW_NOTE,
+  NOTE_UNAVAILABLE,
   noteDetailQueryKey,
   notesQueryKey,
   sameView,
@@ -37,8 +38,9 @@ export function NotesPage() {
   // URL state (design 7 + developer decision, task 07): the view and the open note survive a reload.
   const view = viewFromParams(searchParams)
   const isShared = view.kind === 'shared'
-  // Shared notes do not open yet (task 08 brings opening with the role rules).
-  const openNote = isShared ? null : searchParams.get('note')
+  // In "Velem megosztott" a note opens too (task 08); the editor follows its role. There is no new note there.
+  const requestedNote = searchParams.get('note')
+  const openNote = isShared && requestedNote === NEW_NOTE ? null : requestedNote
   const isNew = openNote === NEW_NOTE
 
   const folders = useQuery({ queryKey: foldersQueryKey, queryFn: api.folders })
@@ -81,6 +83,11 @@ export function NotesPage() {
       : fixedViewTexts[view.kind].heading
   const emptyText = view.kind === 'folder' ? FOLDER_EMPTY_TEXT : fixedViewTexts[view.kind].emptyText
   const editorOpen = openNote !== null
+
+  // The open note vanished meanwhile (revoked share, deleted by its owner): a reload of it got 404 (403 is not
+  // expected on GET, but treated alike). Every reload path (Frissítés, after a save) reloads the lists as well.
+  const detailGone =
+    detail.isError && detail.error instanceof ApiError && (detail.error.status === 404 || detail.error.status === 403)
 
   // A saved note whose folder differs from a folder/"Mappa nélküli" view: the view follows the note, which stays
   // open (V46). `replace`: the old view no longer lists the note, so Back should not return to it.
@@ -130,6 +137,7 @@ export function NotesPage() {
         onDeleted={() => navigate(viewPath(view), { replace: true })}
         onClose={() => go(viewPath(view))}
         onDirtyChange={setDirty}
+        unavailableMessage={detailGone ? NOTE_UNAVAILABLE : null}
       />
     )
   }
@@ -189,7 +197,7 @@ export function NotesPage() {
             </div>
           </div>
 
-          <div className={isShared ? 'max-w-3xl' : 'lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-8'}>
+          <div className="lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-8">
             {/* On narrow screens the open note takes the list's place. */}
             <section aria-label="Jegyzetlista" className={editorOpen ? 'hidden lg:block' : undefined}>
               {notes.isPending && <p role="status">Betöltés…</p>}
@@ -208,26 +216,26 @@ export function NotesPage() {
                 ))}
             </section>
 
-            {!isShared && (
-              <section aria-label="Szerkesztő" className={editorOpen ? undefined : 'hidden lg:block'}>
-                {editorOpen ? (
-                  <>
-                    <GuardedLink
-                      to={viewPath(view)}
-                      onNavigate={go}
-                      className="mb-3 inline-block font-bold underline underline-offset-4 hover:text-stamp lg:hidden"
-                    >
-                      ← Vissza a listához
-                    </GuardedLink>
-                    {renderEditor()}
-                  </>
-                ) : (
-                  <p className="border-2 border-dashed border-manila-dark px-5 py-10 text-center text-faded">
-                    Válassz egy jegyzetet a listából, vagy kezdj újat az „Új jegyzet” gombbal.
-                  </p>
-                )}
-              </section>
-            )}
+            <section aria-label="Szerkesztő" className={editorOpen ? undefined : 'hidden lg:block'}>
+              {editorOpen ? (
+                <>
+                  <GuardedLink
+                    to={viewPath(view)}
+                    onNavigate={go}
+                    className="mb-3 inline-block font-bold underline underline-offset-4 hover:text-stamp lg:hidden"
+                  >
+                    ← Vissza a listához
+                  </GuardedLink>
+                  {renderEditor()}
+                </>
+              ) : (
+                <p className="border-2 border-dashed border-manila-dark px-5 py-10 text-center text-faded">
+                  {isShared
+                    ? 'Válassz egy jegyzetet a listából.'
+                    : 'Válassz egy jegyzetet a listából, vagy kezdj újat az „Új jegyzet” gombbal.'}
+                </p>
+              )}
+            </section>
           </div>
         </main>
       </div>

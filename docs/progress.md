@@ -17,7 +17,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 06 – Frontend: váz, belépés, lista (`tasks/06-frontend-auth-and-list.md`)
 - [x] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
 - [x] 07b – A 07. kézi próbájában talált két hiba javítása, frontend-teszttel (`tasks/07b-editor-bugfixes.md`)
-- [ ] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
+- [x] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [ ] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
 - [ ] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
 - [ ] 11 – README, API-leírás, MI-használat (`tasks/11-readme-and-docs.md`)
@@ -106,7 +106,7 @@ a commitot a fejlesztő hagyja jóvá.
 - 07: a kézi lépéseket (`docs/testing/manual/07.md`, 36 lépés) a fejlesztő hajtja végre a commit előtt; az agent böngészős
   próbát nem végzett.
 - 07 → 08: a megosztott jegyzet megnyitása (`?view=shared&note=` jelenleg figyelmen kívül marad) és a szerep szerinti tiltás a
-  `NoteEditor`-ban; az editor szerkesztő szerepnél a Törlést és a Mappa mezőt rejtse.
+  `NoteEditor`-ban; az editor szerkesztő szerepnél a Törlést és a Mappa mezőt rejtse. (A 08-ban megvalósítva.)
 - 07b: fejlesztői döntések: a `@testing-library/dom` (a `@testing-library/react` peer-függősége) kifejezetten
   fejlesztői függőség; a V46 az új jegyzetre is vonatkozik (mappa nézetben más mappába / mappa nélkül létrehozott
   jegyzet után a nézet a jegyzet helyére vált); a nézetváltás `replace` navigációval megy. Javaslat: a design 7.
@@ -118,3 +118,15 @@ a commitot a fejlesztő hagyja jóvá.
 - 07b → 10: a valódi hiba bizonyítékai: `docs/testing/runs/07b-failed-save-keeps-draft-elbukik.txt` / `…-atmegy.txt`,
   teszt: `notes-web/src/pages/NotesPage.test.tsx`; hibás változat: `2a1bee2` (frontendkód: `4a51135`).
 - 06 napló: a fejlesztői „Ellenőrzés (fejlesztő)” sorban csonka mondat maradt („…megjelent. is a „szerver nem érhető el”…”).
+- 07b → 08: az `npm audit` a commitolt állapotban 0 sebezhetőséget jelez, vite 8.3.8, picomatch 4.0.7
+  (`docs/testing/runs/08-npm-audit.txt`, `08-npm-ls-picomatch.txt`); a fenti 07b-s audit-megjegyzés így lezárult.
+- 08: fejlesztői döntések: a megosztás-kezelő a szerkesztő lapján lévő „Megosztás” szakasz (csak tulajdonosnak, csak
+  mentett jegyzetnél); a visszavonás megerősítést kér; ha a megnyitott jegyzet elérhetetlenné válik (újratöltéskor
+  404/403), a szerkesztő a beírt szöveggel nyitva marad, felül üzenet, a Mentés és a Törlés tiltott, a lista frissül.
+  Javaslat: a design 7. szakaszába felvenni (a fejlesztő dönt).
+- 08: az olvasónál a mezők `readOnly`-k (kijelölhető, nem szerkeszthető), nincs számláló; a megosztott jegyzet URL-je
+  `?view=shared&note=<id>`, ott `note=new` nem nyílik meg.
+- 08: a kézi lépéseket (`docs/testing/manual/08.md`, 27 lépés, két böngészőprofil + két PowerShell-lépés) a fejlesztő
+  hajtja végre a commit előtt; az agent böngészős próbát nem végzett.
+- 08: ha a címzett szerepe visszavonás + újramegosztás után megváltozik (V4), a nyitott szerkesztő a következő
+  újratöltéskor követi az új szerepet; erre nincs automatizált teszt.

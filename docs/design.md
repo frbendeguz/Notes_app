@@ -227,7 +227,20 @@ a `[ApiController]` automatikus modellvalidációja ne adjon más formátumú v�
     Vissza gombja nem a régi nézetre lép (V46).
   - Sikertelen mentés (validációs, hálózati vagy szerverhiba): a hibaüzenet a szerkesztőn belül jelenik meg, a
     szerkesztő és a beírt szöveg megmarad, és a Mentés újra megnyomható (V47).
-  - A „Velem megosztott” lista a 07-ben csak olvasható; a megnyitás a szerep szerinti tiltással a 08-ban jön (V41).
+  - A „Velem megosztott” lista a 07-ben csak olvasható volt (V41); a 08-tól a sorai megnyithatók
+    (`?view=shared&note=<id>`).
+- Megosztás és szerepek (08. feladat):
+  - A tulajdonos megosztás-kezelője a szerkesztő alján lévő „Megosztás” szakasz: felhasználónév + szerep űrlap, a
+    jelenlegi megosztások listája, visszavonás. Új, még nem mentett jegyzetnél nem jelenik meg (V50).
+  - A visszavonás megerősítést kér a meglévő megerősítő ablakkal („X többé nem éri el a jegyzetet.”) (V51).
+  - Hibák: nem létező címzett (404) és ismételt megosztás (409) → a szerver üzenete; önmagaddal (400) → a
+    felhasználónév mező hibája; üres névnél nincs kérés.
+  - Szerep szerinti szerkesztő: az olvasónál csak olvasható mezők, nincs Mentés, Törlés, Mappa, Megosztás; a
+    szerkesztőnél van Mentés, de nincs Törlés, Mappa, Megosztás. A nem tulajdonos a fejlécben látja a szerepét és a
+    tulajdonos nevét. Ez csak kényelmi réteg: a 403-at a szerver adja.
+  - Ha a megnyitott jegyzet elérhetetlenné válik (újratöltés vagy mentés 404/403, pl. visszavonás vagy törlés miatt),
+    a szerkesztő nyitva marad a beírt szöveggel, felül üzenet jelenik meg („A jegyzet már nem érhető el: törölték,
+    vagy visszavonták a megosztását.”), a Mentés és a Törlés tiltott, a lista frissül (V52, a V47 mintájára).
 - Szinkron: betöltéskor, mentés után, és „Frissítés" gombbal; valós idejű szinkron nincs. A TanStack Query
   ablakfókuszra nem tölt újra, és a 4xx válaszokat nem próbálja újra (azok nem átmeneti hibák).
 - Elérhetetlen backend (a proxy üres 5xx-et ad): a kliens „A szerver nem érhető el.” jellegű üzenetet mutat.
@@ -274,7 +287,7 @@ A házi feladat követelményei szerint kötelezően bemutatandó (09–10. fela
 - D8 A hosszkorlátok egyetlen helyen (`Limits`) vannak.
 
 ### Értelmezési döntések (v2.0 változásnaplóhoz) (V)
-A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V49.
+A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosítva), V13 (módosítva), V14–V52.
 - V1 Idegen felhasználó: 404 (nem 403).
 - V2 A cím trimmelve tárolódik.
 - V3 Karakterszámolás: UTF-16 `Length`.
@@ -357,6 +370,10 @@ A fejlesztő által kifejezetten jóváhagyva vagy módosítva: V1, V5 (módosí
   használható, mert törő változással a vite főverzióját visszaléptetheti; sebezhetőségnél előbb a meglévő
   főágon javított verziót kell keresni (`npm update`, szükség esetén `overrides`). A gyakorlati kockázat alacsony volt:
   a csomagot csak a fejlesztői eszközök használják, megbízható mintákkal; a böngészőbe kerülő kódban nincs benne.
+- V50 A megosztás-kezelő a szerkesztő lapján, annak alján lévő szakasz (nem külön ablak); csak a tulajdonosnak és
+  csak mentett jegyzetnél.
+- V51 A megosztás visszavonása megerősítést kér, mint a jegyzet- és mappatörlés.
+- V52 Az elérhetetlenné vált jegyzet szerkesztője nyitva marad a beírt szöveggel és üzenettel; a mentés tiltott.
 
 ## 10. Nem célok
 

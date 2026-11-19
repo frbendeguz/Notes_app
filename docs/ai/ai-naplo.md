@@ -482,3 +482,70 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Döntési eset jelölt?** igen (a fejlesztő dönt) – a 31-es hiba a 10. feladat „valódi fejlesztési hibája” (V48):
   a fejlesztő kézi próbája találta, az automatizált teszt a hibás változaton elbukik, a javítotton átmegy.
 - **Függőségek biztonsága:** a 07b után az `npm audit` magas súlyosságú `picomatch` ReDoS-hibát jelzett. Lefuttattam az `npm audit fix --force`-t, utána ellenőriztem az állapotot: a munkakönyvtár tiszta, a vite főverziója változatlan (8.3.8), `npm ci` után az audit 0 sebezhetőséget jelez, az `npm test` 8/8 és a lint zöld. Tanulság: a `--force` törő változásokat hozhat (az npm előre jelezte a vite visszaléptetését), ezért legközelebb előbb a meglévő főágon javított verziót keresem; ezt szabályként rögzítettem (V49).
+
+## 08 – Frontend: megosztás (2026-11-18)
+- **Fázis:** megvalósítás
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/08-frontend-sharing.md`, design 4., 5. (megosztás), 7., V4, V10, V49, spec 5–7. elfogadási
+  feltétel, CLAUDE.md, `.claude/rules/frontend.md`
+- **Terv és módosításai:** az agent három nyitott kérdést tett fel, a fejlesztő mindháromban az agent ajánlását
+  választotta: (1) a megosztás-kezelő a szerkesztő lapján lévő „Megosztás” szakasz (nem felugró ablak), csak a
+  tulajdonosnak és csak mentett jegyzetnél; (2) a visszavonás megerősítést kér (`ConfirmDialog`); (3) ha a megnyitott
+  jegyzet elérhetetlenné válik (újratöltéskor 404/403), a szerkesztő a beírt szöveggel nyitva marad, felül üzenet
+  jelenik meg, a Mentés tiltott, a lista frissül. A tervet ezekkel jóváhagyta.
+- **Megvalósítás:**
+  - Függőségek (V49): `npm audit` → „found 0 vulnerabilities” (`docs/testing/runs/08-npm-audit.txt`);
+    `npm ls picomatch` → `picomatch@4.0.7`, a vite 8.3.8 (`docs/testing/runs/08-npm-ls-picomatch.txt`).
+  - `api.ts`: `shares`, `shareNote`, `revokeShare`; `views.ts`: `sharesQueryKey` (`['notes','shares',id]`, a
+    „Frissítés” ezt is újratölti), `NOTE_UNAVAILABLE` üzenet; `limits.ts`: `SHARE_USER_NAME_REQUIRED` (a szerver
+    szövege).
+  - Új `notes/SharePanel.tsx`: felhasználónév + szerep (Olvasó/Szerkesztő), a jelenlegi megosztások
+    `RoleStamp`-pel, visszavonás megerősítéssel; a 400-as mezőhibák (`errors.userName`, `errors.role`), egyébként a
+    `detail` jelenik meg; üres névnél nincs kérés.
+  - `NoteEditor.tsx`: a szerep a `note.role`-ból. Olvasó: `readOnly` mezők, számláló, Mentés, Törlés, Mappa és
+    Megosztás nélkül, „Ezt a jegyzetet csak olvasni tudod.”; a mentés kódja is kilép (a csak olvasható címben az
+    Enter különben elküldené az űrlapot). Szerkesztő: Mentés van, Törlés/Mappa/Megosztás nincs. Nem tulajdonosnál
+    a fejlécben szerepbélyegző és „Tulajdonos: …”. Új `unavailableMessage` prop.
+  - `NotesPage.tsx`: a „Velem megosztott” nézetben is megnyílik a jegyzet (`?view=shared&note=<id>`, `note=new` ott
+    nem), kétoszlopos elrendezéssel; a részletek újratöltésének 404/403-a → `NOTE_UNAVAILABLE` a szerkesztőben.
+    `NoteList.tsx`: a megosztott sorok is linkek, a szerep és a tulajdonos alattuk.
+  - Tesztek: `SharePanel.test.tsx` (7 eset), `NoteEditor.test.tsx` (6 eset), `NotesPage.shared.test.tsx` (2 eset).
+  - `docs/testing/manual/08.md`: 27 lépés két böngészőprofillal, két PowerShell-lépés (UTF-8 bájtokként küldött
+    törzs) a szerver 403-ára olvasóként és szerkesztőként.
+- **Eltérés a tervtől megvalósítás közben:**
+  - A `NotesPage` tesztje külön fájlba került (`NotesPage.shared.test.tsx`), mert a meglévő teszt hamis backendje egy
+    saját jegyzetre épül.
+  - A 07b `NotesPage.test.tsx` mindkét esete elbukott: a tulajdonosi szerkesztőben megjelent `SharePanel` a teszt
+    hamis backendjétől a nem ismert `GET /api/notes/n1/shares`-re 404-et kapott, így egy második `alert` jelent meg
+    (`getByRole('alert')` → több találat). Nem termékhiba, ezért nincs `…-elbukik.txt`. Javítás: a teszt hamis
+    backendje válaszol a shares-kérésre (`[]`), az állítás nem változott; a `SharePanel` a betöltési hibát csak akkor
+    mutatja, ha még nincs listája (sikertelen újratöltésnél a régi lista marad, a hibát a szerkesztő már mutatja).
+  - A `SharePanel` egymásba ágyazott feltételes kifejezése a SonarLint (IDE) jelzése miatt `if`-láncra cserélve.
+- **Blokkolt műveletek (hook/jogosultság):** két shell-parancsot blokkolt a `guard-bash` hook („a docs/spec.md és a
+  docs/design.md védett”), mert a parancs szövegében szerepelt a design fájlneve: (1) egy olvasó `sed` a design V49
+  pontjára → helyette Grep eszköz; (2) a napló bejegyzésének hozzáfűzése heredoc-kal (a szöveg hivatkozik a designra)
+  → helyette az Edit eszköz. Egyik sem a védett fájl módosítására irányult.
+- **Elbukó tesztek valódi hiba miatt:** –
+- **Reviewer megállapításai:** ítélet: „nem zárható le” két blokkoló miatt (a reviewer saját futása: build sikeres,
+  lint 0 jelzés, `npm test` 21/21, `dotnet test` 218/218, `npm audit` 0). Blokkolók és sorsuk: (1) a `progress.md`-ben
+  a 08 nincs kipipálva, nincs 08-as megjegyzés, a „07 → 08” megjegyzés elavult → kipipálva, a 08-as megjegyzések
+  felvéve, a „07 → 08” sor „(A 08-ban megvalósítva.)” jelölést kapott (a 07-es döntési sor történeti, nem változott);
+  (2) a `08.md` eredményoszlopa üres → a fejlesztő kézi próbája, az agent nem pótolhatja; a 07-hez hasonlóan a pipa a
+  kézi próba előtt került be, a fejlesztő a commit előtt futtatja. Nem blokkolók: (3) elérhetetlen saját jegyzetnél a
+  Törlés aktív maradt → javítva (tiltott), új teszt a `NoteEditor.test.tsx`-ben; (4) elérhetetlen jegyzetnél a szerver
+  mentési üzenete helyett az általános üzenet látszik → nem változott (a jóváhagyott döntés szerint); (5) hiányzó
+  automatizált teszt a mentés közbeni 404-re → pótolva (`NotesPage.shared.test.tsx` 2. eset); az olvasói Enter és a
+  visszavonás 404-e továbbra is csak kézi lépéssel fedett (11., 24. lépés); (6) a napló üres sorai → a „Reviewer” sor
+  kitöltve, a két fejlesztői sor a fejlesztőé.
+- **Ellenőrzés:** `npm test`: 5 fájl, 23/23 (a reviewer után; előtte 21/21); `npm run build`: sikeres; `npm run lint` (oxlint): 0-s kilépési kód,
+  jelzés nélkül; `dotnet test`: 218/218; `npm audit`: 0 sebezhetőség, vite 8.3.8. Böngészős próbát az agent nem
+  végzett; a `08.md` lépései a fejlesztőre várnak.
+- **Fejlesztői döntés:**
+  - *A megosztás-kezelő helye (V50):* a szerkesztő alján lévő szakasz, nem külön ablak; a tulajdonos így mindig látja, kivel osztotta meg a jegyzetet, és egy kattintással kezelheti. Új, még nem mentett jegyzetnél nem jelenik meg, mert a megosztáshoz kell a jegyzet azonosítója.
+  - *Visszavonás megerősítéssel (V51):* a visszavonás azonnal elveszi a címzett hozzáférését, ezért ugyanúgy megerősítést kér, mint a törlés.
+  - *Elérhetetlenné vált jegyzet (V52):* a szerkesztő nyitva marad a beírt szöveggel, üzenettel és tiltott mentéssel, a V47 mintájára, hogy a címzett ne veszítse el, amit éppen írt; a szöveget kimásolhatja.
+  - *A reviewer javításai:* elfogadtam (a Törlés tiltása elérhetetlen saját jegyzetnél, teszt a visszavonás miatti 404-es mentésre). Az általános üzenet a szerver mentési üzenete helyett a V52-ből következik, így marad.
+- **Ellenőrzés (fejlesztő):** a `docs/testing/manual/08.md` 27 lépését két böngészőprofillal, futó backenden végrehajtottam: [eredmény]. Saját futtatás: `npm test` [x/23], `dotnet test` [x/218].
+- **Döntési eset jelölt?** nem
+- **Korlát (hook):** a Bash-védő hook ismét két shell-parancsot blokkolt (egy olvasást és a napló bővítését), mert a szövegükben szerepelt a `docs/design.md` neve. Az agent Grep és Edit eszközre váltott. Megoldásként a `CLAUDE.md`-be felvettem, hogy fájlműveletekhez a dedikált eszközöket használja.
+- **Korlát (kézi lépések):** másodszor fordult elő, hogy az MI által írt PowerShell-segédfüggvény Windows PowerShell 5.1 alatt hibásan működött (itt a hibaválasz törzsét nem tudta kiolvasni). Az agent a parancsokat nem futtathatta, ezért ez csak a kézi végrehajtáskor derült ki. A státuszkódok helyesek voltak, a termék működése nem volt hibás.

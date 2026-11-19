@@ -47,6 +47,8 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
   if (method === 'GET' && url === '/api/folders') return json([])
   if (method === 'GET' && url === '/api/notes') return json([NOTE])
   if (method === 'GET' && url === '/api/notes/n1') return json(NOTE)
+  // The owner's editor has the sharing section since task 08.
+  if (method === 'GET' && url === '/api/notes/n1/shares') return json([])
   if (method === 'PUT' && url === '/api/notes/n1') {
     const sent = body as { title: string; content: string }
     return json({ ...NOTE, title: sent.title, content: sent.content, updatedAt: '2026-11-18T11:00:00Z' })

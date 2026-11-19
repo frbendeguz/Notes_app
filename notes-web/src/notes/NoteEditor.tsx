@@ -4,6 +4,7 @@ import { api, ApiError, errorMessage } from '../api'
 import { dangerButton, primaryButton, secondaryButton } from '../components/buttonStyles'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ErrorAlert } from '../components/ErrorAlert'
+import { RoleStamp } from '../components/RoleStamp'
 import type { FieldErrors, Folder, NoteDetail } from '../types'
 import {
   CONTENT_MAX,
@@ -13,6 +14,7 @@ import {
   TITLE_TOO_LONG,
   titleLength,
 } from './limits'
+import { SharePanel } from './SharePanel'
 import { foldersQueryKey, noteDetailQueryKey } from './views'
 
 const dateFormat = new Intl.DateTimeFormat('hu-HU', { dateStyle: 'medium', timeStyle: 'short' })
@@ -46,6 +48,11 @@ interface NoteEditorProps {
   onDeleted: () => void
   onClose: () => void
   onDirtyChange: (dirty: boolean) => void
+  /**
+   * Set when reloading the open note failed with 404/403 (deleted, or its share revoked): the sheet stays with the
+   * typed text (developer decision, task 08), shows this message and does not save.
+   */
+  unavailableMessage?: string | null
 }
 
 /**
@@ -62,6 +69,7 @@ export function NoteEditor({
   onDeleted,
   onClose,
   onDirtyChange,
+  unavailableMessage = null,
 }: NoteEditorProps) {
   const queryClient = useQueryClient()
   const id = useId()
@@ -79,6 +87,12 @@ export function NoteEditor({
   const [deleting, setDeleting] = useState(false)
 
   const dirty = !sameDraft(draft, saved)
+
+  // Role-based UI (design 4, 7) is only a convenience: the server answers 403/404, and those are shown too.
+  // A new note is always the user's own.
+  const role = note?.role ?? 'Owner'
+  const isOwner = role === 'Owner'
+  const canEdit = role !== 'Viewer'
 
   // "Frissítés" or another device changed the note: an untouched form follows the server; a form with
   // unsaved typing is left alone (last write wins, spec).
@@ -121,6 +135,8 @@ export function NoteEditor({
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    // Enter in the read-only title would still submit the form.
+    if (!canEdit || unavailableMessage) return
     const found = clientErrors(draft)
     setErrors(found)
     setError(Object.keys(found).length > 0 ? 'A megadott adatok érvénytelenek.' : null)
@@ -192,6 +208,7 @@ export function NoteEditor({
   const contentErrors = errors.content ?? []
   const folderErrors = errors.folderId ?? []
   const busy = saving || deleting
+  const shownError = unavailableMessage ?? error
 
   // The draft's folder must have an option, or the <select> would show "(nincs mappa)": while the folders load,
   // and when the folder was deleted meanwhile (saving then gets the server's 404 message).
@@ -207,6 +224,12 @@ export function NoteEditor({
         <h2 id={`${id}-heading`} className="text-xl font-bold">
           {note ? 'Jegyzet' : 'Új jegyzet'}
         </h2>
+        {note && !isOwner && (
+          <p className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <RoleStamp role={role} />
+            <span className="text-faded">Tulajdonos: {note.ownerUserName}</span>
+          </p>
+        )}
         {note && (
           <p className="flex flex-wrap gap-x-4 text-sm text-faded">
             <span>
@@ -219,7 +242,10 @@ export function NoteEditor({
         )}
       </div>
 
-      {error && <ErrorAlert className="mb-5">{error}</ErrorAlert>}
+      {shownError && <ErrorAlert className="mb-5">{shownError}</ErrorAlert>}
+      {!canEdit && (
+        <p className="mb-5 text-sm text-faded">Ezt a jegyzetet csak olvasni tudod.</p>
+      )}
 
       <form onSubmit={handleSave} noValidate>
         <div className="mb-5">
@@ -227,17 +253,23 @@ export function NoteEditor({
             <label htmlFor={titleId} className="font-bold">
               Cím
             </label>
-            <span id={`${titleId}-count`} className={`text-sm ${titleOver ? 'font-bold text-stamp' : 'text-faded'}`}>
-              {titleCount}/{TITLE_MAX}
-            </span>
+            {canEdit && (
+              <span
+                id={`${titleId}-count`}
+                className={`text-sm ${titleOver ? 'font-bold text-stamp' : 'text-faded'}`}
+              >
+                {titleCount}/{TITLE_MAX}
+              </span>
+            )}
           </div>
           <input
             id={titleId}
             value={draft.title}
             onChange={(event) => edit({ title: event.target.value })}
+            readOnly={!canEdit}
             autoComplete="off"
             aria-invalid={titleErrors.length > 0 || titleOver}
-            aria-describedby={[`${titleId}-count`, titleErrors.length > 0 ? `${titleId}-error` : '']
+            aria-describedby={[canEdit ? `${titleId}-count` : '', titleErrors.length > 0 ? `${titleId}-error` : '']
               .filter(Boolean)
               .join(' ')}
             className="mt-1 w-full border-b-2 border-ink bg-transparent px-1 py-1.5 text-2xl font-bold aria-invalid:border-stamp"
@@ -250,21 +282,27 @@ export function NoteEditor({
             <label htmlFor={contentId} className="font-bold">
               Szöveg
             </label>
-            <span
-              id={`${contentId}-count`}
-              className={`text-sm ${contentOver ? 'font-bold text-stamp' : 'text-faded'}`}
-            >
-              {numberFormat.format(draft.content.length)}/{numberFormat.format(CONTENT_MAX)}
-            </span>
+            {canEdit && (
+              <span
+                id={`${contentId}-count`}
+                className={`text-sm ${contentOver ? 'font-bold text-stamp' : 'text-faded'}`}
+              >
+                {numberFormat.format(draft.content.length)}/{numberFormat.format(CONTENT_MAX)}
+              </span>
+            )}
           </div>
           {/* Ruled sheet: the lines are drawn every 2rem and scroll with the text (bg-local). */}
           <textarea
             id={contentId}
             value={draft.content}
             onChange={(event) => edit({ content: event.target.value })}
+            readOnly={!canEdit}
             rows={14}
             aria-invalid={contentErrors.length > 0 || contentOver}
-            aria-describedby={[`${contentId}-count`, contentErrors.length > 0 ? `${contentId}-error` : '']
+            aria-describedby={[
+              canEdit ? `${contentId}-count` : '',
+              contentErrors.length > 0 ? `${contentId}-error` : '',
+            ]
               .filter(Boolean)
               .join(' ')}
             className="mt-1 block w-full resize-y border-2 border-manila-dark bg-transparent bg-[repeating-linear-gradient(to_bottom,transparent_0,transparent_calc(2rem-1px),var(--color-manila-dark)_calc(2rem-1px),var(--color-manila-dark)_2rem)] bg-local px-2 leading-8 aria-invalid:border-stamp"
@@ -272,46 +310,51 @@ export function NoteEditor({
           <FieldMessages id={`${contentId}-error`} messages={contentErrors} />
         </div>
 
-        <div className="mb-6">
-          <label htmlFor={folderId} className="font-bold">
-            Mappa
-          </label>
-          <select
-            id={folderId}
-            value={draft.folderId}
-            onChange={(event) => edit({ folderId: event.target.value })}
-            aria-invalid={folderErrors.length > 0}
-            aria-describedby={folderErrors.length > 0 ? `${folderId}-error` : undefined}
-            className="mt-1 block w-full max-w-sm border-b-2 border-ink bg-transparent px-1 py-1.5"
-          >
-            <option value="">(nincs mappa)</option>
-            {folderMissing && (
-              <option value={draft.folderId}>{folders ? '(törölt mappa)' : 'Betöltés…'}</option>
-            )}
-            {folderList.map((folder) => (
-              <option key={folder.id} value={folder.id}>
-                {folder.name}
-              </option>
-            ))}
-          </select>
-          <FieldMessages id={`${folderId}-error`} messages={folderErrors} />
-        </div>
+        {/* Only the owner files the note (design 4); for others the folder is always null (V24). */}
+        {isOwner && (
+          <div className="mb-6">
+            <label htmlFor={folderId} className="font-bold">
+              Mappa
+            </label>
+            <select
+              id={folderId}
+              value={draft.folderId}
+              onChange={(event) => edit({ folderId: event.target.value })}
+              aria-invalid={folderErrors.length > 0}
+              aria-describedby={folderErrors.length > 0 ? `${folderId}-error` : undefined}
+              className="mt-1 block w-full max-w-sm border-b-2 border-ink bg-transparent px-1 py-1.5"
+            >
+              <option value="">(nincs mappa)</option>
+              {folderMissing && (
+                <option value={draft.folderId}>{folders ? '(törölt mappa)' : 'Betöltés…'}</option>
+              )}
+              {folderList.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+            <FieldMessages id={`${folderId}-error`} messages={folderErrors} />
+          </div>
+        )}
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={busy} className={primaryButton}>
-            {saving ? 'Mentés…' : 'Mentés'}
-          </button>
+          {canEdit && (
+            <button type="submit" disabled={busy || unavailableMessage !== null} className={primaryButton}>
+              {saving ? 'Mentés…' : 'Mentés'}
+            </button>
+          )}
           <button type="button" onClick={onClose} disabled={busy} className={secondaryButton}>
             Bezárás
           </button>
           <span role="status" className="text-sm text-faded">
             {justSaved && !dirty ? 'Mentve.' : dirty ? 'Nem mentett módosítás.' : ''}
           </span>
-          {note && (
+          {note && isOwner && (
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              disabled={busy}
+              disabled={busy || unavailableMessage !== null}
               className={`${dangerButton} ml-auto`}
             >
               Törlés
@@ -319,6 +362,8 @@ export function NoteEditor({
           )}
         </div>
       </form>
+
+      {note && isOwner && !unavailableMessage && <SharePanel noteId={note.id} noteTitle={note.title} />}
 
       <ConfirmDialog
         open={confirmDelete}
