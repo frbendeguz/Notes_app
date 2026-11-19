@@ -549,3 +549,59 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Döntési eset jelölt?** nem
 - **Korlát (hook):** a Bash-védő hook ismét két shell-parancsot blokkolt (egy olvasást és a napló bővítését), mert a szövegükben szerepelt a `docs/design.md` neve. Az agent Grep és Edit eszközre váltott. Megoldásként a `CLAUDE.md`-be felvettem, hogy fájlműveletekhez a dedikált eszközöket használja.
 - **Korlát (kézi lépések):** másodszor fordult elő, hogy az MI által írt PowerShell-segédfüggvény Windows PowerShell 5.1 alatt hibásan működött (itt a hibaválasz törzsét nem tudta kiolvasni). Az agent a parancsokat nem futtathatta, ezért ez csak a kézi végrehajtáskor derült ki. A státuszkódok helyesek voltak, a termék működése nem volt hibás.
+
+## 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (2026-11-19)
+- **Fázis:** tesztelés
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/09-acceptance-walkthrough.md`, spec (elfogadási feltételek, bizonytalanságok), design 8–10.,
+  `docs/ai/ai-naplo.md`, `docs/testing/manual/06–08.md`, CLAUDE.md, `.claude/rules/testing.md`
+- **Terv és módosításai:** az agent feltérképezte a meglévő `// ACn` jelölésű teszteket, és két hiányt talált:
+  - AC2: nincs teszt arra, hogy ugyanaz a fiók két egyszerre belépett klienssel látja egymás módosításait;
+  - nincs a mappatörlést és a megosztást összekötő regressziós teszt.
+
+  Az agent két új tesztet, az `acceptance.md`-t, a futások mentését és a V1–V13 ellenőrzését javasolta.
+  Három kérdést tett fel; a fejlesztő mindháromban az agent első javaslatát választotta:
+  1. Regressziós esetnek az új backend-teszt legyen, ne a 07b frontend-tesztje.
+  2. A felületi részeknél az `acceptance.md` a már lefuttatott `manual/06–08.md` lépésekre hivatkozzon, ne új kézi lépésekre.
+  3. Az `npm` kimenetek külön `runs/09-npm-*.txt` fájlokba is kerüljenek.
+- **Eltérés a tervtől megvalósítás közben:** – (a terv szerinti két teszt és dokumentumok készültek).
+- **Blokkolt műveletek (hook/jogosultság):** – . Az első tesztfuttatás buildje elbukott, mert a fejlesztő háttérben futva
+  hagyott `Notes.Api` folyamata zárolta a `Notes.Api.exe`-t (MSB3027). Az agent nem állította le a folyamatot, hanem
+  megkérte a fejlesztőt. A fejlesztő leállította a backendet és a frontendet, utána a build sikerült.
+- **Elbukó tesztek valódi hiba miatt:** – (mindkét új teszt elsőre átment: `NotesTests.SameAccount_TwoIndependentClients_SeeEachOthersChanges`,
+  `SharingTests.DeleteFolder_SharedNoteInFolder_RecipientKeepsAccess`).
+- **V1–V13 ellenőrzése:** eltérés nincs; a bizonyítékok a `docs/progress.md` 09-es megjegyzésében.
+- **Reviewer megállapításai:** ítélet: lezárható, blokkoló hiba nincs.
+
+  A reviewer saját futása:
+  - `dotnet test`: 220/220;
+  - `npm test`: 23/23;
+  - `npm run build`: sikeres;
+  - `npm run lint`: 0-s kilépési kód.
+
+  Ellenőrizte azt is, hogy az `acceptance.md` minden tesztneve létezik.
+
+  Nem blokkoló észrevételek és sorsuk:
+  1. A pipa és a napló sorai hiányoznak → a reviewer után pótolva (a két fejlesztői sor a fejlesztőé).
+  2. Az `acceptance.md` a regressziós esetnél fordított irányt írt („a 05-öt védi a 04 változásaival szemben”, holott a 04 a
+     korábbi) → átfogalmazva: a 04 és a 05 együttes működését védi a későbbi változtatásokkal szemben. A teszt kommentje is
+     ehhez igazodik.
+  3. Elírás („A tesztben elsőre átment”) → javítva.
+  4. A regressziós teszt nem ellenőrizte az előkészítő POST-ok státuszát → `Assert.Equal(Created, …)` és a `FolderId`
+     ellenőrzése pótolva. Utána a teljes futás újra lefutott, 220/220, a `09-teljes-futas.txt` felülírva.
+  5. Az AC2 felületi kézi lépése hiányzik → nem változott, a `progress.md` nyitott kérdésként tartalmazza.
+- **Ellenőrzés:**
+  - `dotnet test --logger "console;verbosity=normal"`: 220/220 (a reviewer javításai után újrafuttatva), a kimenet a
+    `docs/testing/runs/09-teljes-futas.txt`-ben;
+  - `npm test`: 5 fájl, 23/23;
+  - `npm run build`: sikeres;
+  - `npm run lint`: 0-s kilépési kód, összegzősor nélkül.
+
+  Az `npm` kimenetek a `runs/09-npm-test.txt`, `09-npm-build.txt` és `09-npm-lint.txt` fájlokban vannak. Új kézi
+  vagy böngészős próbát az agent nem végzett; az `acceptance.md` a fejlesztő korábbi kézi futásaira hivatkozik.
+- **Fejlesztői döntés:**
+  - *Regressziós eset:* az új backend-tesztet (`DeleteFolder_SharedNoteInFolder_RecipientKeepsAccess`) választottam. Két korábbi feladat (mappák és megosztás) együttes működését védi. A 07b frontend-tesztjét szándékosan nem jelöltem ki itt, mert az a 10. feladat hibás–javított bizonyítéka; így a két követelményt két külön teszt igazolja.
+  - *Kézi ellenőrzés:* a felületi részekhez a már lefuttatott, eredménnyel rögzített kézi lépésekre hivatkozunk (06.md, 07.md, 08.md), nem írunk újakat. A lépések ugyanazt a viselkedést ellenőrzik, és az eredményük már dokumentált. Az AC2 felületi változatát két böngészővel pótoltam (AC2-K1, AC2-K2).
+  - *Nyers kimenetek:* külön `runs/09-*.txt` fájlokban, az összefoglaló az `acceptance.md` végén.
+- **Ellenőrzés (fejlesztő):** átnéztem az `acceptance.md` „Kötelező esetek” táblázatát és az AC-szakaszokat; saját futtatás: `dotnet test` [x/220], `npm test` [x/23]; az AC2 kézi lépéseit Chrome-ban és Firefoxban végrehajtottam: [eredmény].
+- **Döntési eset jelölt?** nem

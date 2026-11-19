@@ -1,0 +1,22 @@
+
+> notes-web@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v8.3.8 [32mbuilding client environment for production...[36m[39m
+transforming...
+✓ 92 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                  0.45 kB │ gzip:   0.29 kB
+dist/assets/courier-prime-latin-ext-400-normal-CKOCNFvK.woff     9.04 kB
+dist/assets/courier-prime-latin-ext-700-normal-BIFoAzHx.woff     9.28 kB
+dist/assets/courier-prime-latin-ext-400-normal-B-EsvyE4.woff2   12.73 kB
+dist/assets/courier-prime-latin-ext-700-normal-ByMJlNdM.woff2   12.92 kB
+dist/assets/courier-prime-latin-400-normal-BAlbUm6l.woff        14.38 kB
+dist/assets/courier-prime-latin-700-normal-CVvp4Sof.woff        14.67 kB
+dist/assets/courier-prime-latin-400-normal-BbyBr73r.woff2       18.64 kB
+dist/assets/courier-prime-latin-700-normal-D1YCjmaD.woff2       19.34 kB
+dist/assets/index-Dw94-aKP.css                                  19.54 kB │ gzip:   4.68 kB
+dist/assets/index-BKo-0MmS.js                                  326.93 kB │ gzip: 101.79 kB
+
+[32m✓ built in 351ms[39m

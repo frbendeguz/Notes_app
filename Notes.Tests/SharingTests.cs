@@ -512,6 +512,38 @@ public sealed class SharingTests(TestApiFactory factory) : IClassFixture<TestApi
         Assert.Equal(folder.Id, (await LoadNoteAsync(note.Id))!.FolderId);
     }
 
+    // Regression (task 09): protects folder deletion (task 04, D4 SetNull) together with sharing (task 05)
+    // against later changes (e.g. the change request).
+    // Deleting the owner's folder must not remove the note or its shares: the recipient keeps access.
+    [Fact]
+    public async Task DeleteFolder_SharedNoteInFolder_RecipientKeepsAccess()
+    {
+        var owner = await AuthHelper.CreateUserAsync(factory);
+        var editor = await AuthHelper.CreateUserAsync(factory);
+        var folderResponse = await owner.Client.PostAsJsonAsync("/api/folders", new FolderCreateRequest("Törlendő mappa"));
+        Assert.Equal(HttpStatusCode.Created, folderResponse.StatusCode);
+        var folder = (await folderResponse.Content.ReadFromJsonAsync<FolderSummary>(Json))!;
+        var created = await owner.Client.PostAsJsonAsync("/api/notes", new NoteWriteRequest("Mappában", "eredeti", folder.Id));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var note = (await created.Content.ReadFromJsonAsync<NoteDetail>(Json))!;
+        Assert.Equal(folder.Id, note.FolderId);
+        Assert.Equal(HttpStatusCode.Created, (await ShareAsync(owner.Client, note.Id, editor.UserName, "Editor")).StatusCode);
+
+        var delete = await owner.Client.DeleteAsync($"/api/folders/{folder.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
+        var shared = Assert.Single(await ListSharedAsync(editor.Client));
+        Assert.Equal((note.Id, NoteRole.Editor), (shared.Id, shared.Role));
+        var update = await editor.Client.PutAsJsonAsync($"/api/notes/{note.Id}", new NoteWriteRequest("Mappa nélkül", "szerkesztve"));
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+        Assert.Equal([new ShareInfo(editor.Id, editor.UserName, ShareRole.Editor)], await ListSharesAsync(owner.Client, note.Id));
+        var ownerView = (await owner.Client.GetFromJsonAsync<NoteDetail>($"/api/notes/{note.Id}", Json))!;
+        Assert.Equal(("Mappa nélkül", "szerkesztve"), (ownerView.Title, ownerView.Content));
+        Assert.Null(ownerView.FolderId);
+        var unfiled = await owner.Client.GetFromJsonAsync<List<NoteSummary>>("/api/notes?unfiled=true", Json);
+        Assert.Contains(note.Id, unfiled!.Select(n => n.Id));
+    }
+
     // ---------- Concurrent edits ----------
 
     // Spec: "last write wins" – two PUTs one after the other, the second one is stored.

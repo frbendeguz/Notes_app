@@ -1,0 +1,13 @@
+
+> notes-web@0.0.0 test
+> vitest run
+
+
+ RUN  v5.1.1 C:/Work/NOTES APP/Notes_app/notes-web
+
+
+ Test Files  5 passed (5)
+      Tests  23 passed (23)
+   Start at  17:23:05
+   Duration  9.66s (environment 81%, import 15%, tests 4%, transform 1%)
+

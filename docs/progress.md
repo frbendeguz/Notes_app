@@ -18,7 +18,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 07 – Frontend: szerkesztő és mappák (`tasks/07-frontend-editor-folders.md`)
 - [x] 07b – A 07. kézi próbájában talált két hiba javítása, frontend-teszttel (`tasks/07b-editor-bugfixes.md`)
 - [x] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
-- [ ] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
+- [x] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
 - [ ] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
 - [ ] 11 – README, API-leírás, MI-használat (`tasks/11-readme-and-docs.md`)
 - [ ] (fejlesztő) Tiszta klónból kipróbálva; `v1.0` címke létrehozva és pusholva; a repó publikus
@@ -130,3 +130,22 @@ a commitot a fejlesztő hagyja jóvá.
   hajtja végre a commit előtt; az agent böngészős próbát nem végzett.
 - 08: ha a címzett szerepe visszavonás + újramegosztás után megváltozik (V4), a nyitott szerkesztő a következő
   újratöltéskor követi az új szerepet; erre nincs automatizált teszt.
+- 09: fejlesztői döntések: regressziós esetnek az új `SharingTests.DeleteFolder_SharedNoteInFolder_RecipientKeepsAccess`
+  (nem a 07b frontend-tesztje, az a 10. feladat bizonyítéka); a felületi részeknél az `acceptance.md` a már lefuttatott
+  `manual/06–08.md` lépésekre hivatkozik (nem új kézi lépések); az `npm` kimenetek külön `runs/09-npm-*.txt` fájlokban.
+- 09: két új teszt (`NotesTests.SameAccount_TwoIndependentClients_SeeEachOthersChanges` – AC2, és a fenti regressziós teszt);
+  mindkettő elsőre átment, termékhibát nem találtak. `dotnet test` 220/220, `npm test` 23/23.
+- 09: a design V1–V13 ellenőrzése – eltérés nincs, mind a leírt módon valósult meg:
+  V1 (`NotesTests.NoteOperation_ForeignVsMissingNote_IdenticalNotFoundBody`), V2 (`CreateNote_TitleWithSurroundingSpaces_…`),
+  V3 (`NoteService.Validate`, `FolderService`, `AuthService`: `string.Length`; a kliens `limits.ts` is `.length`), V4 (nincs
+  szerepmódosító végpont, a `SharesController` csak GET/POST/DELETE; ismétlés 409), V5 és V6 (`AuthTests` határ- és
+  karakterosztály-tesztjei), V7 (a `FoldersController` csak GET/POST/DELETE), V8 (`CreateNote_BoundaryLengths_…(1, 0)`),
+  V9 (`appsettings.json` `Jwt:ExpiresMinutes = 60`, `Login_Token_ExpiresAfterConfiguredMinutesAndHasNoRole`; nincs refresh
+  végpont), V10 (`SharingTests` 404/400/409), V11 (`Register_ValidData_Returns201WithTokenThatWorksOnMe`), V12 (`GET
+  /api/auth/me`), V13 (`notes-web/src/api.ts`: csak `sessionStorage`, `localStorage` sehol; `manual/06.md/13–14`).
+- 09: az AC2 „másik eszköz” felületi változatára (ugyanaz a fiók két böngészőben) nincs kézi lépés; az API-szintű teszt fedi.
+  Javaslat: a változtatási igény kézi próbájába egy ilyen lépés felvétele (a fejlesztő dönt).
+  lezárva: AC2-K1–K2 kézi lépés az acceptance.md-ben
+- 09: a `docs/testing/manual/07.md`-nek nincs „Eredmény” összegző szakasza (a 06 és a 08 fájlnak van); az eredmények
+  soronként rögzítettek. Javaslat: a fejlesztő pótolja (dátum, böngésző).
+- 09: az `npm run lint` (oxlint) átirányított kimenetnél nem ír összegzősort, csak a kilépési kód (0) tanúsítja a hibamentességet.

@@ -56,6 +56,33 @@ public sealed class NotesTests(TestApiFactory factory) : IClassFixture<TestApiFa
         Assert.Equal(created, detail);
     }
 
+    // AC2: "another device" – the same account logged in on two independent clients at the same time;
+    // both tokens stay valid and each client sees the other's changes on its next request.
+    [Fact]
+    public async Task SameAccount_TwoIndependentClients_SeeEachOthersChanges()
+    {
+        var user = await AuthHelper.CreateUserAsync(factory);
+        var deviceA = await LoginAsync(user);
+        var deviceB = await LoginAsync(user);
+
+        var createdResponse = await deviceA.PostAsJsonAsync("/api/notes", new NoteWriteRequest("Laptopon írva", "első változat"));
+        Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+        var created = (await createdResponse.Content.ReadFromJsonAsync<NoteDetail>(Json))!;
+
+        var seenOnB = Assert.Single(await ListAsync(deviceB));
+        Assert.Equal((created.Id, "Laptopon írva"), (seenOnB.Id, seenOnB.Title));
+        Assert.Equal(created, await deviceB.GetFromJsonAsync<NoteDetail>($"/api/notes/{created.Id}", Json));
+
+        var update = await deviceB.PutAsJsonAsync($"/api/notes/{created.Id}", new NoteWriteRequest("Telefonon javítva", "második változat"));
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+
+        var seenOnA = (await deviceA.GetFromJsonAsync<NoteDetail>($"/api/notes/{created.Id}", Json))!;
+        Assert.Equal(("Telefonon javítva", "második változat"), (seenOnA.Title, seenOnA.Content));
+        Assert.Equal(await ListAsync(deviceA), await ListAsync(deviceB));
+        // The token from the registration (a third "device") is still valid as well.
+        Assert.Equal(await ListAsync(deviceA), await ListAsync(user.Client));
+    }
+
     [Fact]
     public async Task CreateNote_Timestamps_SerializedAsUtcAndUnchangedAfterReadBack()
     {
