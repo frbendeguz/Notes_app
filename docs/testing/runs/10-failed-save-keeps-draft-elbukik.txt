@@ -1,0 +1,33 @@
+
+> notes-web@0.0.0 test
+> vitest run src/pages/NotesPage.test.tsx
+
+
+ RUN  v5.1.1 C:/Work/NOTES APP/Notes_app/notes-web
+
+ ❯ src/pages/NotesPage.test.tsx (2 tests | 2 failed) 333ms
+   ❯ NotesPage – failed save (V47) (2)
+     × keeps the editor and the typed text after a network error, and saves it when the backend is back 257ms
+     × keeps the editor and the typed text after a 5xx without a body, and saves it when the backend is back 75ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pages/NotesPage.test.tsx > NotesPage – failed save (V47) > keeps the editor and the typed text after a network error, and saves it when the backend is back
+ FAIL  src/pages/NotesPage.test.tsx > NotesPage – failed save (V47) > keeps the editor and the typed text after a 5xx without a body, and saves it when the backend is back
+AssertionError: a szerkesztő „Szöveg” mezője látható marad: expected null not to be null
+ ❯ src/pages/NotesPage.test.tsx:123:69
+    121|
+    122|     const field = contentField()
+    123|     expect(field, 'a szerkesztő „Szöveg” mezője látható marad').not.to…
+       |                                                                     ^
+    124|     expect(field?.value, 'a beírt szöveg megmarad').toBe(typed)
+    125|     const editor = screen.getByRole('article', { name: 'Jegyzet' })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  19:45:51
+   Duration  14.94s (environment 85%, import 11%, tests 2%, transform 1%)
+

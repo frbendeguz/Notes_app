@@ -603,5 +603,62 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
   - *Regressziós eset:* az új backend-tesztet (`DeleteFolder_SharedNoteInFolder_RecipientKeepsAccess`) választottam. Két korábbi feladat (mappák és megosztás) együttes működését védi. A 07b frontend-tesztjét szándékosan nem jelöltem ki itt, mert az a 10. feladat hibás–javított bizonyítéka; így a két követelményt két külön teszt igazolja.
   - *Kézi ellenőrzés:* a felületi részekhez a már lefuttatott, eredménnyel rögzített kézi lépésekre hivatkozunk (06.md, 07.md, 08.md), nem írunk újakat. A lépések ugyanazt a viselkedést ellenőrzik, és az eredményük már dokumentált. Az AC2 felületi változatát két böngészővel pótoltam (AC2-K1, AC2-K2).
   - *Nyers kimenetek:* külön `runs/09-*.txt` fájlokban, az összefoglaló az `acceptance.md` végén.
-- **Ellenőrzés (fejlesztő):** átnéztem az `acceptance.md` „Kötelező esetek” táblázatát és az AC-szakaszokat; saját futtatás: `dotnet test` [x/220], `npm test` [x/23]; az AC2 kézi lépéseit Chrome-ban és Firefoxban végrehajtottam: [eredmény].
+- **Ellenőrzés (fejlesztő):** átnéztem az `acceptance.md` „Kötelező esetek” táblázatát és az AC-szakaszokat; saját futtatás: `dotnet test` 220/220, `npm test` 23/23; az AC2 kézi lépéseit Chrome-ban és Firefoxban végrehajtottam, mindkettő az elvárt eredményt adta.
 - **Döntési eset jelölt?** nem
+
+## 10 – Hibafeltárás bemutatása (2026-11-19)
+- **Fázis:** tesztelés
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/10-bug-demonstration.md`, a napló „Elbukó tesztek valódi hiba miatt” sorai (07b),
+  `docs/testing/runs/07b-*`, `docs/testing/acceptance.md`, design 7. („Szerkesztő” blokk), V47, V48, CLAUDE.md,
+  `.claude/rules/frontend.md`
+- **Terv és módosításai:** az agent az A) utat javasolta: a 07b valódi hibája, V47, amelyet a fejlesztő kézi próbája
+  talált, és amelynek két futása megvolt. Két kérdést tett fel. (1) Jóváhagyja-e a fejlesztő az A) utat? A fejlesztő
+  jóváhagyta. (2) Elég-e a 07b két futására hivatkozni (a), vagy a mai kódban is idézze elő újra a hibát (b): a hibás
+  feltétel ideiglenes visszaállítása, futtatás, mentés, visszaállítás, újrafuttatás. A fejlesztő a (b)-t választotta.
+  A tervet ezekkel jóváhagyta.
+- **Megvalósítás:**
+  - A `notes-web/src/pages/NotesPage.tsx`-ben a javítás (`!detail.data && detail.isError` és az utána álló
+    `Betöltés…` sor) ideiglenesen a `2a1bee2`-es alakra került vissza: `if (detail.isPending) … if (detail.isError)`.
+  - `npm test -- src/pages/NotesPage.test.tsx` → 2/2 elbukik, az állításon („a szerkesztő „Szöveg” mezője látható
+    marad: expected null not to be null”, `NotesPage.test.tsx:123`). Kimenet:
+    `docs/testing/runs/10-failed-save-keeps-draft-elbukik.txt`.
+  - A hibás állapot diffje `git diff`-fel elmentve: `docs/testing/10-valodi-hiba-visszaallitas.patch`, a
+    reprodukáláshoz. A `git apply --check` a mai kódon sikeres.
+  - Visszaállítás `git checkout -- notes-web/src/pages/NotesPage.tsx`-szel. Újrafuttatás → 2/2 átmegy. Kimenet:
+    `docs/testing/runs/10-failed-save-keeps-draft-atmegy.txt`.
+  - `docs/testing/hibafeltaras.md`: a hiba tünete, az elvárt működés (design 7., V47; a spec AC-jei közvetlenül nem
+    írják le), az ok sorhivatkozásokkal a `2a1bee2`-ben, a hibás kódrészlet, a javítás (`a93041c`), a teszt és a
+    hibaüzenet értelmezése, a négy futás táblázata és a reprodukálás.
+  - `docs/testing/acceptance.md`: új sor a „Kötelező esetek” táblázatban („Hibafeltárás – valódi hiba (10)”), amely a
+    `hibafeltaras.md`-re hivatkozik.
+- **Eltérés a tervtől megvalósítás közben:** a patch-fájl (`10-valodi-hiba-visszaallitas.patch`) a tervben nem
+  szerepelt külön fájlként. A B) út mintájára készült, hogy a reprodukálás egy paranccsal menjen.
+- **Blokkolt műveletek (hook/jogosultság):** –
+- **Elbukó tesztek valódi hiba miatt:** `NotesPage – failed save (V47)`, mindkét eset. A tesztek a 07b-ben feltárt
+  hibát a mai kódba visszaállítva újra előidézték, ez nem új hiba. Kimenetek: `runs/10-failed-save-keeps-draft-elbukik.txt`
+  és `…-atmegy.txt`; az eredetiek: `runs/07b-*`.
+- **Reviewer megállapításai:** ítélet: „nem zárható le” egy blokkoló miatt. A reviewer saját futása: `dotnet test`
+  220/220, `npm test` 23/23, lint és build 0, a `git apply --check` sikeres, a `git status` csak dokumentációt mutat.
+  - Blokkoló: (1) a `progress.md`-ben a 10 nincs kipipálva → a lezárás utolsó lépéseként kipipálva.
+  - Nem blokkolók és sorsuk:
+    - (2) A napló reviewer- és fejlesztői sorai üresek → a reviewer sor kitöltve, a fejlesztői sorok a fejlesztőé.
+    - (3) A fejlesztői döntéseket (A) út, (b) változat) a repóból nem lehet igazolni → a fejlesztő erősítse meg.
+    - (4) A `hibafeltaras.md` a hibás változat okánál a mai `views.ts:95-96`-ra hivatkozott → javítva:
+      `2a1bee2:…views.ts:83` (a mai sorszám zárójelben). A többi sorhivatkozást a kóddal egyezőnek találta.
+    - (5) A 09-es bejegyzésben helyőrzők maradtak (`[x/220]`, `[x/23]`, `[eredmény]`) → nem a 10. feladat része, nem
+      változott, a `progress.md`-be felvéve.
+  - Hatókörön kívüli változás nincs; a patch-fájlt a feladat nem tiltja, és az „Eltérés” sor leírja.
+- **Ellenőrzés:**
+  - `dotnet test`: 220/220;
+  - `npm test`: 5 fájl, 23/23;
+  - `npm run lint`: 0-s kilépési kód;
+  - `npm run build`: 0-s kilépési kód;
+  - `git status`: csak dokumentáció (a `notes-web/src` változatlan).
+- **Fejlesztői döntés:**
+  - *A) út – valódi hiba:* jóváhagytam. A 07. feladat kézi próbájában talált hibát (sikertelen mentésnél elveszett a beírt szöveg, V47) használjuk, nem szándékosan beültetett hibát. Valódi hiba esetén a teszt azt bizonyítja, hogy egy ténylegesen előfordult hibát fog meg, és a hibás változat a git történetben is megvan (2a1bee2), a javítás pedig külön commitban (a93041c).
+  - *(b) – újrafuttatás a mai kódon:* ezt választottam a régi futásokra hivatkozás helyett. A 07b óta a 08. feladat a `NotesPage.tsx`-et és a tesztet is módosította, így csak a mostani futás bizonyítja, hogy a teszt a jelenlegi kódbázisban is elkapja a hibát. A hibát ideiglenesen ugyanazzal az egy feltétellel állítottuk vissza, nem új hibát ültettünk be, és a kód utána a helyes állapotba került vissza.
+  - *A visszaállító patch (`10-valodi-hiba-visszaallitas.patch`):* a terven túli kiegészítés, elfogadtam. Ezzel a hibás állapot egy paranccsal (`git apply`) reprodukálható, ami a bemutatást és az ellenőrzést is megkönnyíti.
+- **Ellenőrzés (fejlesztő):** elolvastam a `hibafeltaras.md`-t, és összevetettem a `runs/10-…-elbukik.txt` és `…-atmegy.txt` kimenetekkel: a hibás futásban mindkét eset ugyanazon az állításon bukik el („expected null not to be null”), a javított futásban mindkettő átmegy. A `git status` szerint a kódban nincs változás, csak a dokumentációban.
+- **Ellenőrzés (fejlesztő):** elolvastam a `hibafeltaras.md`-t, és összevetettem a `runs/10-…-elbukik.txt` és `…-atmegy.txt` kimenetekkel: a hibás futásban mindkét eset ugyanazon az állításon bukik el („expected null not to be null”), a javított futásban mindkettő átmegy. A `git status` szerint a kódban nincs változás, csak a dokumentációban. A `git apply --check` a visszaállító patch-re hiba nélkül lefutott, tehát a hibás állapot a mai kódon is reprodukálható.
+- **Döntési eset jelölt?** (a fejlesztő dönt) – a 07b-nél már jelölt: a hibát a kézi próba találta, nem az agent.

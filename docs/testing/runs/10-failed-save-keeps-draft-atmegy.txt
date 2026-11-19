@@ -1,0 +1,13 @@
+
+> notes-web@0.0.0 test
+> vitest run src/pages/NotesPage.test.tsx
+
+
+ RUN  v5.1.1 C:/Work/NOTES APP/Notes_app/notes-web
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:49:37
+   Duration  5.67s (environment 78%, import 13%, tests 6%, transform 2%)
+

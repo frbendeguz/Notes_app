@@ -19,7 +19,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 07b – A 07. kézi próbájában talált két hiba javítása, frontend-teszttel (`tasks/07b-editor-bugfixes.md`)
 - [x] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [x] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
-- [ ] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
+- [x] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
 - [ ] 11 – README, API-leírás, MI-használat (`tasks/11-readme-and-docs.md`)
 - [ ] (fejlesztő) Tiszta klónból kipróbálva; `v1.0` címke létrehozva és pusholva; a repó publikus
 
@@ -149,3 +149,12 @@ a commitot a fejlesztő hagyja jóvá.
 - 09: a `docs/testing/manual/07.md`-nek nincs „Eredmény” összegző szakasza (a 06 és a 08 fájlnak van); az eredmények
   soronként rögzítettek. Javaslat: a fejlesztő pótolja (dátum, böngésző).
 - 09: az `npm run lint` (oxlint) átirányított kimenetnél nem ír összegzősort, csak a kilépési kód (0) tanúsítja a hibamentességet.
+- 10: fejlesztői döntések:
+  - A) út: a 07b valódi hibája (V47);
+  - a hibát a mai kódban is újra előidéztük (a hibás feltétel ideiglenes visszaállítása): `runs/10-failed-save-keeps-draft-elbukik.txt`
+    / `…-atmegy.txt`;
+  - reprodukálás: `git apply docs/testing/10-valodi-hiba-visszaallitas.patch`.
+
+  Összefoglaló: `docs/testing/hibafeltaras.md`, hivatkozás az `acceptance.md` „Kötelező esetek” táblázatából.
+- 10: a 09-es naplóbejegyzés „Ellenőrzés (fejlesztő)” sorában helyőrzők maradtak (`[x/220]`, `[x/23]`, `[eredmény]`) – a fejlesztő pótolja.
+- 10 → 11: a README tesztelési részébe: a `hibafeltaras.md` és a reprodukálás parancsa.

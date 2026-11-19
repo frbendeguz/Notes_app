@@ -1,0 +1,25 @@
+diff --git a/notes-web/src/pages/NotesPage.tsx b/notes-web/src/pages/NotesPage.tsx
+index 970c1b8..15d2ee7 100644
+--- a/notes-web/src/pages/NotesPage.tsx
++++ b/notes-web/src/pages/NotesPage.tsx
+@@ -112,10 +112,8 @@ export function NotesPage() {
+         />
+       )
+     }
+-    // Once the note is loaded, the editor stays mounted even if a later reload fails (e.g. the lists are
+-    // refreshed after a failed save while the backend is down): unmounting it would lose the typed text (V47).
+-    // The error block is only for a note that could not be loaded at all (e.g. 404).
+-    if (!detail.data && detail.isError) {
++    if (detail.isPending) return <p role="status">Betöltés…</p>
++    if (detail.isError) {
+       return (
+         <div className="rounded-sm bg-paper px-5 py-6 sm:px-8">
+           <ErrorAlert className="mb-4">{errorMessage(detail.error)}</ErrorAlert>
+@@ -125,7 +123,6 @@ export function NotesPage() {
+         </div>
+       )
+     }
+-    if (!detail.data) return <p role="status">Betöltés…</p>
+     return (
+       <NoteEditor
+         key={detail.data.id}

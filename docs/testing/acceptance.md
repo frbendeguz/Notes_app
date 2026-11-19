@@ -24,6 +24,7 @@ commit és a 09. feladat két új tesztje alapján.
 | Hibás bemenet | `NotesTests.UpdateNote_InvalidInput_Returns400AndNoteUnchanged("   ", "új", "title")` (és `""`, `null` sora) | Meglévő jegyzet mentése szóközös/üres címmel 400, `errors.title` hibaüzenettel; a tárolt jegyzet (cím, szöveg, `UpdatedAt`) változatlan (AC4). | ✅ átment |
 | Jogosulatlan művelet | `SharingTests.Viewer_UpdateAndDelete_Return403AndNoteUnchanged` | Az olvasó PUT és DELETE kérése 403 „Nincs jogosultságod ehhez a művelethez.”; a jegyzet címe, szövege és `UpdatedAt`-je változatlan (AC6). | ✅ átment |
 | Regresszió | `SharingTests.DeleteFolder_SharedNoteInFolder_RecipientKeepsAccess` (új, 09) | Lásd lent. | ✅ átment |
+| Hibafeltárás – valódi hiba (10) | `NotesPage.test.tsx` – „NotesPage – failed save (V47)” (2 eset) | Sikertelen mentésnél (leállított backend) a szerkesztő és a beírt szöveg megmarad (V47). A hibás változaton elbukik, a javítotton átmegy. Részletek, futások és reprodukálás: [`hibafeltaras.md`](hibafeltaras.md). | ✅ átment (a hibás változaton ❌) |
 
 **A regressziós eset mit véd:** a korábbi feladatok, a 04. (mappatörlés, D4 `SetNull`) és a 05. (megosztás) együttes
 működését a későbbi változtatásokkal, például a változtatási igénnyel szemben.
