@@ -662,3 +662,55 @@ Fázisok: követelményelemzés/tervezés · megvalósítás · tesztelés · v�
 - **Ellenőrzés (fejlesztő):** elolvastam a `hibafeltaras.md`-t, és összevetettem a `runs/10-…-elbukik.txt` és `…-atmegy.txt` kimenetekkel: a hibás futásban mindkét eset ugyanazon az állításon bukik el („expected null not to be null”), a javított futásban mindkettő átmegy. A `git status` szerint a kódban nincs változás, csak a dokumentációban.
 - **Ellenőrzés (fejlesztő):** elolvastam a `hibafeltaras.md`-t, és összevetettem a `runs/10-…-elbukik.txt` és `…-atmegy.txt` kimenetekkel: a hibás futásban mindkét eset ugyanazon az állításon bukik el („expected null not to be null”), a javított futásban mindkettő átmegy. A `git status` szerint a kódban nincs változás, csak a dokumentációban. A `git apply --check` a visszaállító patch-re hiba nélkül lefutott, tehát a hibás állapot a mai kódon is reprodukálható.
 - **Döntési eset jelölt?** (a fejlesztő dönt) – a 07b-nél már jelölt: a hibát a kézi próba találta, nem az agent.
+
+## 11 – README, API-leírás, MI-használat (2026-11-20)
+- **Fázis:** dokumentáció
+- **Eszköz:** Claude Code (VS Code bővítmény), Claude Opus 5.5
+- **Kontextus:** `docs/tasks/11-readme-and-docs.md`, spec, design 1., 3., 5. és 10. szakasz, `docs/testing/acceptance.md`,
+  `docs/testing/hibafeltaras.md`, `docs/ai/00-tervezes-osszefoglalo.md`, `docs/ai/ai-naplo.md`,
+  `docs/claude-code-utmutato.md`, CLAUDE.md, a `.claude/` tartalma, a controllerek, service-ek, DTO-k és a `Program.cs`
+- **Terv és módosításai:** az agent terve: `README.md`, `docs/api.md` (a kódból), `docs/ai/mi-hasznalat.md`,
+  linkellenőrzés, tiszta klón próbája. Négy kérdést tett fel, a fejlesztő döntései:
+  1. Node-verzió: a projektfájlok nem rögzítik; a README a Vite 8 követelményét (20.19+ / 22.12+) és a fejlesztéskor
+     használt 24.13.0-t írja; .NET: `net10.0`, SDK 10.0.401. Elfogadva.
+  2. A frontend telepítése `npm ci`-vel. Elfogadva.
+  3. A `docs/claude-code-utmutato.md` két pontatlanságát (nem létező `CLAUDE.local.md.example`; a marketplace neve
+     `claude-plugins-official`, a `settings.json`-ban `anthropic-plugin-directory`) csak jelezni kell, javítani nem.
+  4. Döntési eset jelöltek fázisonként egy-egy: V13, V22, V47. Elfogadva.
+- **Eltérés a tervtől megvalósítás közben:** –. Az `api.md` a 16 API-végpont mellett a Developmentben elérhető
+  `/openapi/v1.json`-t is leírja (a tervben szerepelt).
+- **Blokkolt műveletek (hook/jogosultság):**
+  - A `guard-bash` hook blokkolta az első, felmérő shell-parancsot (`wc -l` a dokumentumokra), mert a szövegében
+    szerepelt a design fájlneve. Helyette Grep/Read eszköz.
+  - A tiszta klón előkészítését (`rm -rf` + `git clone` egy parancsban) a jogosultság elutasította. Helyette `rm`
+    nélkül, új mappába klónozott.
+- **Elbukó tesztek valódi hiba miatt:** – (kódváltozás nem volt).
+- **Reviewer megállapításai:** ítélet: „nem zárható le” egy adminisztratív blokkoló miatt. A reviewer saját futása:
+  `dotnet build` 0/0, `dotnet test` 220/220, `npm run build` sikeres, `npm run lint` 0-s kilépési kód, `npm test` 23/23;
+  a 34 link és a 16 végpont rendben; az `api.md` útvonalai, státuszkódjai, üzenetei, DTO-mezői, ellenőrzési sorrendjei
+  (V18, V25, V30) és a V26/V28/V31 viselkedés a kóddal egyezik; hatókörön kívüli változás nincs.
+  - Blokkoló: (1) a `progress.md`-ben a 11 nincs kipipálva → kipipálva.
+  - Nem blokkolók és sorsuk:
+    - (2) a napló reviewer-sora helyőrző → kitöltve; a fejlesztői sorok a fejlesztőé;
+    - (3) a tiszta klón ugyanazon a gépen futott, így a user-secrets (a `UserSecretsId` alapján, a felhasználói
+      profilban) már tartalmazta a JWT-kulcsot: a README 3. lépését (kulcs beállítása) és a backend indítását senki nem
+      próbálta ki → nem változott, a fejlesztő kézi próbája fedi le (tiszta klón, lehetőleg másik gépen vagy profilban);
+    - (4) a README „Verzió: v1.0” sora a címke előtt készült → nem változott, a címke a commit után jön létre;
+    - (5) a `progress.md` 06 → 11 megjegyzése `npm install`-t ír → „(A 11-ben megvalósítva, … `npm ci`-vel.)” jelölés.
+- **Ellenőrzés:**
+  - A HEAD (`b54b8a1`) tiszta klónján, a scratchpadben: `dotnet tool restore` sikeres (`dotnet-ef` 10.0.15);
+    `dotnet build`: 0 hiba, 0 figyelmeztetés; `dotnet test`: 220/220; `dotnet ef database update --project Notes.Api`:
+    sikeres, létrejött a `Notes.Api/notes.db`; `npm ci`: 0 sebezhetőség; `npm run build`: sikeres. A backendet és a
+    frontendet az agent nem indította el (a jogosultság tiltja), böngészős próba nem történt.
+  - Linkellenőrzés (Node-szkript): a `README.md`, az `api.md` és a `mi-hasznalat.md` 34 relatív linkje mind létező
+    fájlra mutat.
+  - Végpontok: a 4 controller 16 akciója mind szerepel az `api.md`-ben (auth 3, notes 7, shares 3, folders 3).
+- **Fejlesztői döntés:**
+  - *Verziók a README-ben:* elfogadtam: „Node.js 20.19+ vagy 22.12+ (a Vite 8 követelménye); fejlesztve: 24.13.0” és
+    „.NET 10 SDK; fejlesztve: 10.0.401”. A projektfájlokban nem rögzítjük (nincs `engines`/`.nvmrc`), mert az
+    kódváltozás lett volna; a README minimum- és tényleges verziót is megad.
+  - *`npm ci` az indításnál:* a lockfájlt pontosan követi, így tiszta klónból mindenkinél ugyanazok a csomagverziók települnek.
+  - *Az útmutató két pontatlansága:* csak jelezve (progress.md), nem javítva, mert a feladat hatókörén kívül esik.
+  - *Döntési eset jelöltek:* fázisonként egy: V13 (tervezés), V22 (megvalósítás), V47 (tesztelés);
+- **Ellenőrzés (fejlesztő):** a README telepítési és indítási lépésein egy tiszta klónon végigmentem a fejlesztői gépen; minden lépés sikeres volt, a backend és a frontend elindult, a regisztráció, a jegyzet létrehozása és a megosztás működött. A 3. lépést (JWT-kulcs beállítása) nem hajtottam végre új kulccsal, mert ugyanazon a gépen a user-secrets már tartalmazta a kulcsot. A kulcs nélküli indulást az `AuthTests.Startup_JwtKeyMissingOrTooShort_Throws` teszt fedi le.
+- **Döntési eset jelölt?** nem

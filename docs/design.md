@@ -15,8 +15,8 @@ Solution-struktúra:
 ```
 Notes.sln
 ├─ Notes.Api/
-│  ├─ Controllers/   Auth, Notes, Folders (vékonyak: DTO be → service hívás → HTTP kód ki)
-│  ├─ Services/      AuthService, NoteService, FolderService, NoteAccessService
+│  ├─ Controllers/   Auth, Notes, Folders, Shares (vékonyak: DTO be → service hívás → HTTP kód ki)
+│  ├─ Services/      AuthService, NoteService, FolderService, ShareService, NoteAccessService
 │  ├─ Data/          AppDbContext, Entities/
 │  ├─ Migrations/    EF Core migrációk (a dotnet ef generálja)
 │  ├─ Dtos/          request/response modellek
@@ -119,7 +119,10 @@ A `POST /api/folders` `Location` fejléce `/api/folders/{id}`, bár ezen az útv
 ezért egy `GET` kérés oda 405-öt kapna); ez dokumentált, vállalt eltérés (V26).
 
 Mappák és jegyzetek részletei (04. feladat):
-- `GET /api/notes?folderId=<id>`: idegen vagy nem létező mappára 404, nem üres lista (V20).
+- `GET /api/notes?folderId=<id>`: idegen vagy nem létező mappára 404, nem üres lista (V20). Nem GUID formájú
+  `folderId` lekérdezési paraméterre 400 (modellkötési hiba), szemben az útvonal-paraméterrel (`{id:guid}`), ahol 404.
+- `GET /openapi/v1.json`: az API gépi leírása (OpenAPI), a webapi sablon része; a részletes, kézzel írt leírás a
+  `docs/api.md`.
 - `unfiled=false` ugyanaz, mint a szűrő hiánya; 400 csak `folderId` + `unfiled=true` együtt (V21).
 - `GET /api/folders`: a sorrend magyar ábécé szerinti, kis- és nagybetűtől független, a rendezés memóriában
   történik `hu-HU` kultúrával (V22).

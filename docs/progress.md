@@ -20,7 +20,7 @@ a commitot a fejlesztő hagyja jóvá.
 - [x] 08 – Frontend: megosztás (`tasks/08-frontend-sharing.md`)
 - [x] 09 – Elfogadási feltételek ellenőrzése és tesztjelentés (`tasks/09-acceptance-walkthrough.md`)
 - [x] 10 – Hibafeltárás bemutatása (`tasks/10-bug-demonstration.md`)
-- [ ] 11 – README, API-leírás, MI-használat (`tasks/11-readme-and-docs.md`)
+- [x] 11 – README, API-leírás, MI-használat (`tasks/11-readme-and-docs.md`)
 - [ ] (fejlesztő) Tiszta klónból kipróbálva; `v1.0` címke létrehozva és pusholva; a repó publikus
 
 ## Változtatási igény (a 2. mérföldkő után)
@@ -91,7 +91,8 @@ a commitot a fejlesztő hagyja jóvá.
 - 06: a kézi lépéseket (`docs/testing/manual/06.md`, 25 lépés) a fejlesztő hajtja végre a commit előtt; az agent
   böngészős és proxyn keresztüli próbát nem végzett (a `dotnet run` + `curl` füstpróbát a jogosultság elutasította).
 - 06 → 11: a README-be: frontend indítása (`cd notes-web`, `npm install`, `npm run dev`, `http://localhost:5173`); a backend
-  címe a `notes-web/vite.config.ts`-ben, a `NOTES_API_URL` környezeti változóval felülírható.
+  címe a `notes-web/vite.config.ts`-ben, a `NOTES_API_URL` környezeti változóval felülírható. (A 11-ben
+  megvalósítva, a fejlesztő döntése szerint `npm ci`-vel.)
 - 06 → 07: a hibaüzenet-megjelenítés (`ApiError.message`, `ApiError.errors`) és a `buttonStyles` újrahasználható; a lista
   query-kulcsai `['notes', …]`, mentés után az invalidálás ezzel a prefixszel megy.
 - 07: fejlesztői döntések: a nyitott jegyzet az URL-ben (`?note=<id>` / `?note=new`, mappa nézet `?view=folder&folder=<id>`);
@@ -158,3 +159,18 @@ a commitot a fejlesztő hagyja jóvá.
   Összefoglaló: `docs/testing/hibafeltaras.md`, hivatkozás az `acceptance.md` „Kötelező esetek” táblázatából.
 - 10: a 09-es naplóbejegyzés „Ellenőrzés (fejlesztő)” sorában helyőrzők maradtak (`[x/220]`, `[x/23]`, `[eredmény]`) – a fejlesztő pótolja.
 - 10 → 11: a README tesztelési részébe: a `hibafeltaras.md` és a reprodukálás parancsa.
+- 11: fejlesztői döntések: a Node-verzió a Vite 8 követelményéből (20.19+ / 22.12+, fejlesztve 24.13.0), a frontend
+  `npm ci`-vel indul; döntési eset jelöltek fázisonként egy (V13, V22, V47).
+- 11: a kód eltérései a `docs/design.md` 1. és 5. szakaszától (a design nem módosult, a fejlesztő dönt):
+  - design 1.: a fastruktúrából hiányzik a `SharesController` és a `ShareService` (a 05-ben készült), és a `Migrations/`
+    helye is eltér (lásd a 01-es megjegyzést);
+  - design 5.: nincs benne a Developmentben elérhető `GET /openapi/v1.json` (a `webapi` sablonból, napló 01);
+  - design 5.: nincs benne, hogy a nem GUID `?folderId=` 400-at ad (`errors.folderId`, „A kérés formátuma érvénytelen.”);
+  - design 5. hibatábla: a 405 (létező útvonal, nem támogatott metódus) és a sikertelen belépés hiányzó mezőre (V15, a
+    3. szakaszban szerepel) nincs a táblában.
+  Egyébként a végpontok, a DTO-k, a státuszkódok és a hibakódok egyeznek.
+- 11: a `docs/claude-code-utmutato.md` pontatlanságai (a fejlesztő döntése szerint csak jelezve): a fájltáblázat egy
+  nem létező `CLAUDE.local.md.example`-t említ; a `frontend-design` telepítésénél a marketplace neve
+  `claude-plugins-official`, a `.claude/settings.json`-ban viszont `frontend-design@anthropic-plugin-directory` van.
+- 11: a tiszta klónt az agent a HEAD-ből ellenőrizte (build, 220/220 teszt, `dotnet ef database update`, `npm ci`,
+  `npm run build`); a backend és a frontend elindítása és a böngészős próba a fejlesztőre vár (lépések a README-ben).
